@@ -1,3 +1,4 @@
 env/
 contract_data/
 **/__pycache__/
+*.pyc

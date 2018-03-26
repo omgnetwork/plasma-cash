@@ -1,6 +1,11 @@
+from plasma_cash.config import plasma_config
+from plasma_cash.root_chain.deployer import Deployer
+
+
 class ChildChain(object):
 
-    def __init__(self, authority, root_chain):
+    def __init__(self, authority=plasma_config['AUTHORITY'],
+                 root_chain=Deployer().get_contract('RootChain/RootChain.sol')):
         self.root_chain = root_chain
         self.authority = authority
         self.blocks = {}
