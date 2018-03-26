@@ -48,10 +48,6 @@ class Deployer(object):
         # Get transaction hash from deployed contract
         tx_hash = contract.deploy(transaction={'from': self.w3.eth.accounts[0], 'gas': gas}, args=args)
 
-        # Get tx receipt to get contract address
-        tx_receipt = self.w3.eth.getTransactionReceipt(tx_hash)
-        contract_address = tx_receipt['contractAddress']
-        plasma_config['ROOT_CHAIN_CONTRACT_ADDRESS'] = contract_address
         print("Successfully deployed {} contract!".format(contract_name))
 
     def get_contract(self, path):
