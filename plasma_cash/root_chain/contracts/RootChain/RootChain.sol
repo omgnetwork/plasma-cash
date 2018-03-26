@@ -5,7 +5,7 @@ contract RootChain {
     /*
      * Events
      */
-    event Deposit(address depositor, uint256 amount, bytes32 uid);
+    event Deposit(address depositor, uint256 amount, uint256 uid);
 
     /*
      * Storage
@@ -55,6 +55,6 @@ contract RootChain {
         bytes32 uid = keccak256(currency, msg.sender, depositCount);
         wallet[uid] = amount;
         depositCount += 1;
-        Deposit(msg.sender, amount, uid);
+        Deposit(msg.sender, amount, uint256(uid));
     }
 }

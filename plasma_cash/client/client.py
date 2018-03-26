@@ -9,3 +9,6 @@ class Client(object):
                  child_chain=ChildChainService('http://localhost:8546')):
         self.root_chain = root_chain
         self.child_chain = child_chain
+
+    def deposit(self, amount, depositor, currency='0x0000000000000000000000000000000000000000'):
+        self.root_chain.transact({'from': depositor}).deposit(currency, amount)
