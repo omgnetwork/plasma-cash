@@ -7,12 +7,10 @@ from plasma_cash.utils.utils import sign
 class Transaction(rlp.Serializable):
 
     fields = [
-        [
-            ('prev_block', big_endian_int),
-            ('uid', big_endian_int),
-            ('amount', big_endian_int),
-            ('new_owner', utils.address)
-        ],
+        ('prev_block', big_endian_int),
+        ('uid', big_endian_int),
+        ('amount', big_endian_int),
+        ('new_owner', utils.address),
         ('sig', binary)
     ]
 

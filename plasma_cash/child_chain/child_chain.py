@@ -17,7 +17,6 @@ class ChildChain(object):
         deposit_filter.watch(self.apply_deposit)
 
     def apply_deposit(self, event):
-        print(event)
         new_owner = event['args']['depositor']
         amount = event['args']['amount']
         uid = event['args']['uid']
