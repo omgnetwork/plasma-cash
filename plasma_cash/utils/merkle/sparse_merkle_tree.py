@@ -5,7 +5,7 @@ from ethereum.utils import sha3
 class SparseMerkleTree(object):
 
     def __init__(self, leaves={}):
-        self.depth = 4
+        self.depth = 256
         self.leaves = OrderedDict(sorted(leaves.items(), key=lambda t: t[0]))
         self.default_nodes = [b'\x00' * 32]
         self.create_default_nodes()

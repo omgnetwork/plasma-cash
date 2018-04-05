@@ -1,5 +1,6 @@
 from plasma_cash.config import plasma_config
 from plasma_cash.root_chain.deployer import Deployer
+from .block import Block
 from .transaction import Transaction
 
 
@@ -10,6 +11,7 @@ class ChildChain(object):
         self.root_chain = root_chain
         self.authority = authority
         self.blocks = {}
+        self.current_block = Block()
         self.current_block_number = 1
 
         # Register for deposit event listener
@@ -21,3 +23,4 @@ class ChildChain(object):
         amount = event['args']['amount']
         uid = event['args']['uid']
         deposit_tx = Transaction(0, uid, amount, new_owner)
+        self.current_block.transaction_set[uid] = deposit_tx
