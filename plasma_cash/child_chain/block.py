@@ -12,7 +12,7 @@ class Block(rlp.Serializable):
         ('sig', binary),
     ]
 
-    def __init__(self, transaction_set=[], sig=b'\x00' * 65):
+    def __init__(self, transaction_set={}, sig=b'\x00' * 65):
         self.transaction_set = transaction_set
         self.sig = sig
         self.merkle = None
