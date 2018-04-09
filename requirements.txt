@@ -1,0 +1,6 @@
+py-solc
+web3
+Flask
+requests
+rlp
+ethereum
