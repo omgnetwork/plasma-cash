@@ -29,3 +29,13 @@ class ChildChainService(object):
             return response
         else:
             raise Exception
+
+    def get_current_block(self):
+        end_point = '/block'
+        response = self.request(end_point, 'GET')
+        return response.text
+
+    def submit_block(self, sig):
+        end_point = '/submit_block'
+        data = {'sig': sig}
+        response = self.request(end_point, 'POST', data=data)
