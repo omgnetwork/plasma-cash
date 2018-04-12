@@ -4,6 +4,7 @@ from plasma_cash.config import plasma_config
 from plasma_cash.root_chain.deployer import Deployer
 from plasma_cash.utils.utils import get_sender
 from .block import Block
+from .exceptions import InvalidBlockSignatureException
 from .transaction import Transaction
 
 
@@ -26,12 +27,13 @@ class ChildChain(object):
         amount = event['args']['amount']
         uid = event['args']['uid']
         deposit_tx = Transaction(0, uid, amount, new_owner)
-        self.current_block.transaction_set[uid] = deposit_tx
+        self.current_block.transaction_set.append(deposit_tx)
 
     def submit_block(self, sig):
         signature = bytes.fromhex(sig)
-        assert signature != b'\x00' * 65
-        assert get_sender(self.current_block.hash, signature) == self.authority
+        if (signature == b'\x00' * 65 or
+            get_sender(self.current_block.hash, signature) != self.authority):
+            raise InvalidBlockSignatureException('failed to submit a block')
 
         merkle_hash = self.current_block.merkilize_transaction_set
         self.root_chain.transact({'from': '0x' + self.authority.hex()}).submitBlock(merkle_hash, self.current_block_number)
