@@ -1,8 +1,8 @@
 import rlp
 from rlp.sedes import binary, CountableList
 from ethereum import utils
-from plasma_cash.utils.utils import sign
-from plasma_cash.child_chain.transaction import Transaction
+from plasma_cash.utils.merkle.sparse_merkle_tree import SparseMerkleTree
+from .transaction import Transaction
 
 
 class Block(rlp.Serializable):
@@ -21,8 +21,11 @@ class Block(rlp.Serializable):
     def hash(self):
         return utils.sha3(rlp.encode(self, UnsignedBlock))
 
-    def sign(self, key):
-        self.sig = sign(self.hash, key)
+    @property
+    def merkilize_transaction_set(self):
+        hashed_transaction_dict = {tx.uid: tx.merkle_hash for tx in self.transaction_set}
+        self.merkle = SparseMerkleTree(hashed_transaction_dict)
+        return self.merkle.root
 
 
 UnsignedBlock = Block.exclude(['sig'])
