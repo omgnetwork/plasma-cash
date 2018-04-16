@@ -1,8 +1,10 @@
 import rlp
 from ethereum import utils
+
 from plasma_cash.config import plasma_config
 from plasma_cash.root_chain.deployer import Deployer
 from plasma_cash.utils.utils import get_sender
+
 from .block import Block
 from .exceptions import InvalidBlockSignatureException
 from .transaction import Transaction
@@ -32,11 +34,15 @@ class ChildChain(object):
     def submit_block(self, sig):
         signature = bytes.fromhex(sig)
         if (signature == b'\x00' * 65 or
-            get_sender(self.current_block.hash, signature) != self.authority):
+           get_sender(self.current_block.hash, signature) != self.authority):
             raise InvalidBlockSignatureException('failed to submit a block')
 
         merkle_hash = self.current_block.merkilize_transaction_set
-        self.root_chain.transact({'from': '0x' + self.authority.hex()}).submitBlock(merkle_hash, self.current_block_number)
+
+        self.root_chain.transact(
+            {'from': '0x' + self.authority.hex()}
+        ).submitBlock(merkle_hash, self.current_block_number)
+
         self.blocks[self.current_block_number] = self.current_block
         self.current_block_number += 1
         self.current_block = Block()

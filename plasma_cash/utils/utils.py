@@ -7,6 +7,7 @@ def sign(hash, key):
     vrs_bytes = [u.encode_int32(i) for i in rsv[:2]] + [u.int_to_bytes(rsv[2])]
     return b''.join(vrs_bytes)
 
+
 def get_sender(hash, sig):
     v = sig[64]
     if v < 27:
