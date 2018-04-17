@@ -1,8 +1,10 @@
 import rlp
 from ethereum import utils
+
 from plasma_cash.child_chain.block import Block
 from plasma_cash.root_chain.deployer import Deployer
 from plasma_cash.utils.utils import sign
+
 from .child_chain_service import ChildChainService
 
 

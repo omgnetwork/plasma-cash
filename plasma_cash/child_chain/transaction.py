@@ -1,6 +1,7 @@
 import rlp
-from rlp.sedes import big_endian_int, binary
 from ethereum import utils
+from rlp.sedes import big_endian_int, binary
+
 from plasma_cash.utils.utils import sign
 
 

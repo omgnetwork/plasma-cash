@@ -1,9 +1,10 @@
 import json
 import os
-from solc import compile_standard
-from web3 import Web3, HTTPProvider
-from plasma_cash.config import plasma_config
 
+from solc import compile_standard
+from web3 import HTTPProvider, Web3
+
+from plasma_cash.config import plasma_config
 
 OWN_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -15,7 +16,12 @@ class Deployer(object):
 
     def get_dirs(self, path):
         abs_contract_path = os.path.realpath(os.path.join(OWN_DIR, 'contracts'))
-        extra_args = [[file, [os.path.realpath(os.path.join(r, file))]] for r, d, f in os.walk(abs_contract_path) for file in f]
+
+        extra_args = []
+        for r, d, f in os.walk(abs_contract_path):
+            for file in f:
+                extra_args.append([file, [os.path.realpath(os.path.join(r, file))]])
+
         contracts = {}
         for contract in extra_args:
             contracts[contract[0]] = {'urls': contract[1]}
@@ -46,9 +52,12 @@ class Deployer(object):
         contract = self.w3.eth.contract(abi=abi, bytecode=bytecode)
 
         # Get transaction hash from deployed contract
-        tx_hash = contract.deploy(transaction={'from': self.w3.eth.accounts[0], 'gas': gas}, args=args)
+        tx_hash = contract.deploy(
+            transaction={'from': self.w3.eth.accounts[0], 'gas': gas},
+            args=args
+        )
 
-        print("Successfully deployed {} contract!".format(contract_name))
+        print('Successfully deployed {} contract with tx hash {}!'.format(contract_name, tx_hash))
 
     def get_contract(self, path):
         file_name = path.split('/')[1]

@@ -1,5 +1,7 @@
 import requests
 
+from .exceptions import RequestFailedException
+
 
 class ChildChainService(object):
 
@@ -10,25 +12,21 @@ class ChildChainService(object):
 
     def request(self, end_point, method, params=None, data=None, headers=None):
         url = self.base_url + end_point
-        try:
-            response = requests.request(
-                           method=method,
-                           url=url,
-                           params=params,
-                           data=data,
-                           headers=headers,
-                           verify=self.verify,
-                           timeout=self.timeout,
-                       )
-        except requests.exceptions.Timeout:
-            raise Exception
-        except requests.exceptions.ConnectionError:
-            raise Exception
+
+        response = requests.request(
+            method=method,
+            url=url,
+            params=params,
+            data=data,
+            headers=headers,
+            verify=self.verify,
+            timeout=self.timeout,
+        )
 
         if response.ok:
             return response
         else:
-            raise Exception
+            raise RequestFailedException('failed with response: {}'.format(response))
 
     def get_current_block(self):
         end_point = '/block'
@@ -38,4 +36,4 @@ class ChildChainService(object):
     def submit_block(self, sig):
         end_point = '/submit_block'
         data = {'sig': sig}
-        response = self.request(end_point, 'POST', data=data)
+        self.request(end_point, 'POST', data=data)

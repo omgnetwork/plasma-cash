@@ -1,7 +1,9 @@
 import rlp
-from rlp.sedes import binary, CountableList
 from ethereum import utils
+from rlp.sedes import CountableList, binary
+
 from plasma_cash.utils.merkle.sparse_merkle_tree import SparseMerkleTree
+
 from .transaction import Transaction
 
 
