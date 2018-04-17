@@ -26,7 +26,7 @@ class Block(rlp.Serializable):
     @property
     def merkilize_transaction_set(self):
         hashed_transaction_dict = {tx.uid: tx.merkle_hash for tx in self.transaction_set}
-        self.merkle = SparseMerkleTree(hashed_transaction_dict)
+        self.merkle = SparseMerkleTree(256, hashed_transaction_dict)
         return self.merkle.root
 
 
