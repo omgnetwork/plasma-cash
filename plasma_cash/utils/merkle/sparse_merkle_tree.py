@@ -36,7 +36,8 @@ class SparseMerkleTree(object):
             for index, value in tree_level.items():
                 if index % 2 == 0:
                     # If the node is a left node, assume the right sibling is a default node.
-                    # in the case right sibling is not default node, it would override on next round
+                    # in the case right sibling is not default node,
+                    # it would override on next round
                     next_level[index // 2] = sha3(value + default_nodes[level])
                 else:
                     # If the node is a right node, check if its left sibling is a default node.

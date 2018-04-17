@@ -1,8 +1,6 @@
 import rlp
 from ethereum import utils
 
-from plasma_cash.config import plasma_config
-from plasma_cash.root_chain.deployer import Deployer
 from plasma_cash.utils.utils import get_sender
 
 from .block import Block
@@ -12,8 +10,7 @@ from .transaction import Transaction
 
 class ChildChain(object):
 
-    def __init__(self, authority=plasma_config['AUTHORITY'],
-                 root_chain=Deployer().get_contract('RootChain/RootChain.sol')):
+    def __init__(self, authority, root_chain):
         self.root_chain = root_chain
         self.authority = authority
         self.blocks = {}
@@ -29,7 +26,7 @@ class ChildChain(object):
         amount = event['args']['amount']
         uid = event['args']['uid']
         deposit_tx = Transaction(0, uid, amount, new_owner)
-        self.current_block.transaction_set.append(deposit_tx)
+        self.current_block.add_tx(deposit_tx)
 
     def submit_block(self, sig):
         signature = bytes.fromhex(sig)
@@ -37,7 +34,7 @@ class ChildChain(object):
            get_sender(self.current_block.hash, signature) != self.authority):
             raise InvalidBlockSignatureException('failed to submit a block')
 
-        merkle_hash = self.current_block.merkilize_transaction_set
+        merkle_hash = self.current_block.merklize_transaction_set()
 
         self.root_chain.transact(
             {'from': '0x' + self.authority.hex()}
