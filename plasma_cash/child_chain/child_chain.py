@@ -52,8 +52,8 @@ class ChildChain(object):
     def apply_transaction(self, transaction):
         tx = rlp.decode(utils.decode_hex(transaction), Transaction)
 
-        prev_tx = self.blocks[tx.prev_block].get_tx(tx.uid)
-        if prev_tx == None:
+        prev_tx = self.blocks[tx.prev_block].get_tx_by_uid(tx.uid)
+        if prev_tx is None:
             raise PreviousTxNotFoundException('failed to apply transaction')
         if prev_tx.spent:
             raise TxAlreadySpentException('failed to apply transaction')

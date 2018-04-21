@@ -1,7 +1,3 @@
-class TxAlreadySpentException(Exception):
-    """the transaction is already spent"""
-
-
 class InvalidTxSignatureException(Exception):
     """the signature of a tx is invalid"""
 
