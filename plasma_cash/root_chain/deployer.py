@@ -62,4 +62,8 @@ class Deployer(object):
     def get_contract(self, path):
         file_name = path.split('/')[1]
         abi = json.load(open('contract_data/%s.json' % (file_name.split('.')[0])))
-        return self.w3.eth.contract(abi, plasma_config['ROOT_CHAIN_CONTRACT_ADDRESS'])
+        contract = self.w3.eth.contract(
+            address=plasma_config['ROOT_CHAIN_CONTRACT_ADDRESS'],
+            abi=abi
+        )
+        return contract
