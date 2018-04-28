@@ -37,3 +37,8 @@ class ChildChainService(object):
         end_point = '/submit_block'
         data = {'sig': sig}
         self.request(end_point, 'POST', data=data)
+
+    def send_transaction(self, tx):
+        end_point = '/send_tx'
+        data = {'tx': tx}
+        self.request(end_point, 'POST', data=data)

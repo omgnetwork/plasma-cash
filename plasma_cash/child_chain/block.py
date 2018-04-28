@@ -40,5 +40,11 @@ class Block(rlp.Serializable):
     def add_tx(self, tx):
         self.transaction_set.append(tx)
 
+    def get_tx_by_uid(self, uid):
+        for tx in self.transaction_set:
+            if tx.uid == uid:
+                return tx
+        return None
+
 
 UnsignedBlock = Block.exclude(['sig'])

@@ -2,7 +2,7 @@ import rlp
 from ethereum import utils
 from rlp.sedes import big_endian_int, binary
 
-from plasma_cash.utils.utils import sign
+from plasma_cash.utils.utils import get_sender, sign
 
 
 class Transaction(rlp.Serializable):
@@ -31,6 +31,10 @@ class Transaction(rlp.Serializable):
     @property
     def merkle_hash(self):
         return utils.sha3(self.hash + self.sig)
+
+    @property
+    def sender(self):
+        return get_sender(self.hash, self.sig)
 
     def sign(self, key):
         self.sig = sign(self.hash, key)

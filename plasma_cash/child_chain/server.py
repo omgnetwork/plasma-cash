@@ -20,3 +20,9 @@ def get_current_block():
 def submit_block():
     sig = request.form['sig']
     return child_chain.submit_block(sig)
+
+
+@app.route('/send_tx', methods=['POST'])
+def send_tx():
+    tx = request.form['tx']
+    return child_chain.apply_transaction(tx)
