@@ -11,9 +11,10 @@ from plasma_cash.child_chain.exceptions import (InvalidBlockSignatureException,
                                                 PreviousTxNotFoundException,
                                                 TxAlreadySpentException,
                                                 TxAmountMismatchException)
+from unit_tests.unstub_mixin import UnstubMixin
 
 
-class TestChildChain(object):
+class TestChildChain(UnstubMixin):
     DUMMY_AUTHORITY = b"\x14\x7f\x08\x1b\x1a6\xa8\r\xf0Y\x15(ND'\xc1\xf6\xdd\x98\x84"
     DUMMY_SIG = '01' * 65  # sig for DUMMY_AUTHORITY
     DUMMY_TX_NEW_OWNER = b'\xfd\x02\xec\xeeby~u\xd8k\xcf\xf1d.\xb0\x84J\xfb(\xc7'
