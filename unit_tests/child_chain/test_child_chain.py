@@ -4,13 +4,13 @@ from ethereum import utils as eth_utils
 from mockito import any, mock, verify, when
 
 from plasma_cash.child_chain.block import Block
-from plasma_cash.child_chain.transaction import Transaction
 from plasma_cash.child_chain.child_chain import ChildChain
 from plasma_cash.child_chain.exceptions import (InvalidBlockSignatureException,
                                                 InvalidTxSignatureException,
                                                 PreviousTxNotFoundException,
                                                 TxAlreadySpentException,
                                                 TxAmountMismatchException)
+from plasma_cash.child_chain.transaction import Transaction
 from unit_tests.unstub_mixin import UnstubMixin
 
 
