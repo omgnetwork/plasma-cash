@@ -1,6 +1,6 @@
 import rlp
 from ethereum import utils
-from rlp.sedes import CountableList, binary
+from rlp.sedes import CountableList
 
 from plasma_cash.utils.merkle.sparse_merkle_tree import SparseMerkleTree
 
@@ -11,10 +11,9 @@ class Block(rlp.Serializable):
 
     fields = [
         ('transaction_set', CountableList(Transaction)),
-        ('sig', binary),
     ]
 
-    def __init__(self, transaction_set=None, sig=b'\x00' * 65):
+    def __init__(self, transaction_set=None):
         # There's a weird bug that when using
         # def __init__(self, transaction_set=[],...)
         # `transaction_set` would sometimes NOT be an empty list
@@ -25,12 +24,11 @@ class Block(rlp.Serializable):
             transaction_set = []
 
         self.transaction_set = transaction_set
-        self.sig = sig
         self.merkle = None
 
     @property
     def hash(self):
-        return utils.sha3(rlp.encode(self, UnsignedBlock))
+        return utils.sha3(rlp.encode(self))
 
     def merklize_transaction_set(self):
         hashed_transaction_dict = {tx.uid: tx.merkle_hash for tx in self.transaction_set}
@@ -45,6 +43,3 @@ class Block(rlp.Serializable):
             if tx.uid == uid:
                 return tx
         return None
-
-
-UnsignedBlock = Block.exclude(['sig'])
