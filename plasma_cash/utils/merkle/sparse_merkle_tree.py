@@ -16,8 +16,10 @@ class SparseMerkleTree(object):
         self.leaves = OrderedDict(sorted(leaves.items(), key=lambda t: t[0]))
         self.default_nodes = self.create_default_nodes(self.depth)
         if leaves:
-            self.root = self.create_tree(self.leaves, self.depth, self.default_nodes)
+            self.tree = self.create_tree(self.leaves, self.depth, self.default_nodes)
+            self.root = self.tree[-1][0]
         else:
+            self.tree = []
             self.root = self.default_nodes[self.depth - 1]
 
     def create_default_nodes(self, depth):
@@ -29,6 +31,7 @@ class SparseMerkleTree(object):
         return default_nodes
 
     def create_tree(self, ordered_leaves, depth, default_nodes):
+        tree = [ordered_leaves]
         tree_level = ordered_leaves
         for level in range(depth - 1):
             next_level = {}
@@ -47,7 +50,22 @@ class SparseMerkleTree(object):
                         next_level[index // 2] = sha3(default_nodes[level] + value)
                 prev_index = index
             tree_level = next_level
-        return tree_level[0]
+            tree.append(tree_level)
+        return tree
+
+    def create_merkle_proof(self, uid):
+        # Generate a merkle proof for a leaf with provided index. A proof is the concatenation of
+        # the hash of node's sibling from leaf to root.
+        index = uid
+        proof = b''
+        for level in range(self.depth - 1):
+            sibling_index = index + 1 if index % 2 == 0 else index - 1
+            index = index // 2
+            if sibling_index in self.tree[level]:
+                proof += self.tree[level][sibling_index]
+            else:
+                proof += self.default_nodes[level]
+        return proof
 
     class TreeSizeExceededException(Exception):
         """there are too many leaves for the tree to build"""
