@@ -14,7 +14,7 @@ class TestServer(UnstubMixin):
         return app.test_client()
 
     def test_get_current_block(self, client):
-        (when('plasma_cash.child_chain.server')
+        (when('plasma_cash.child_chain.server.container')
             .get_child_chain().thenReturn(self.CHILD_CHAIN))
 
         DUMMY_BLOCK = 'block'
@@ -24,7 +24,7 @@ class TestServer(UnstubMixin):
         assert resp.data == DUMMY_BLOCK.encode()
 
     def test_submit_block(self, client):
-        (when('plasma_cash.child_chain.server')
+        (when('plasma_cash.child_chain.server.container')
             .get_child_chain().thenReturn(self.CHILD_CHAIN))
 
         SIG = 'sig'
@@ -36,7 +36,7 @@ class TestServer(UnstubMixin):
         assert resp.data == DUMMY_MERKLE_HASH.encode()
 
     def test_send_tx(self, client):
-        (when('plasma_cash.child_chain.server')
+        (when('plasma_cash.child_chain.server.container')
             .get_child_chain().thenReturn(self.CHILD_CHAIN))
 
         DUMMY_TX = 'tx'
