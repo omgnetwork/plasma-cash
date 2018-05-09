@@ -17,7 +17,7 @@ python deployment.py
 
 Run child chain:
 ```
-FLASK_APP=plasma_cash/child_chain/server.py flask run --port=8546
+FLASK_APP=plasma_cash/child_chain FLASK_ENV=develment flask run --port=8546
 ```
 
 Client:

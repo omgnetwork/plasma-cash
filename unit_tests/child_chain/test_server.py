@@ -1,7 +1,7 @@
 import pytest
 from mockito import mock, when
 
-from plasma_cash.child_chain.server import app
+from plasma_cash.child_chain.__init__ import create_app
 from unit_tests.unstub_mixin import UnstubMixin
 
 
@@ -9,8 +9,15 @@ class TestServer(UnstubMixin):
     CHILD_CHAIN = mock()
 
     @pytest.fixture(scope='function')
-    def client(self):
+    def app(self):
+        (when('plasma_cash.child_chain.__init__.container')
+            .get_child_chain().thenReturn(self.CHILD_CHAIN))
+        app = create_app()
         app.config['TESTING'] = True
+        return app
+
+    @pytest.fixture(scope='function')
+    def client(self, app):
         return app.test_client()
 
     def test_get_current_block(self, client):
@@ -29,8 +36,7 @@ class TestServer(UnstubMixin):
 
         SIG = 'sig'
         DUMMY_MERKLE_HASH = 'merkle hash'
-        (when(self.CHILD_CHAIN)
-            .submit_block(SIG).thenReturn(DUMMY_MERKLE_HASH))
+        when(self.CHILD_CHAIN).submit_block(SIG).thenReturn(DUMMY_MERKLE_HASH)
 
         resp = client.post('submit_block', data={'sig': SIG})
         assert resp.data == DUMMY_MERKLE_HASH.encode()
@@ -41,8 +47,7 @@ class TestServer(UnstubMixin):
 
         DUMMY_TX = 'tx'
         DUMMY_TX_HASH = 'tx hash'
-        (when(self.CHILD_CHAIN)
-            .apply_transaction(DUMMY_TX).thenReturn(DUMMY_TX_HASH))
+        when(self.CHILD_CHAIN).apply_transaction(DUMMY_TX).thenReturn(DUMMY_TX_HASH)
 
         resp = client.post('send_tx', data={'tx': DUMMY_TX})
         assert resp.data == DUMMY_TX_HASH.encode()
