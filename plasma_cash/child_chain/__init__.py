@@ -1,5 +1,4 @@
 from flask import Flask
-
 from plasma_cash.dependency_config import container
 
 
