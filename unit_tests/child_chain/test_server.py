@@ -1,7 +1,7 @@
 import pytest
 from mockito import mock, when
 
-from plasma_cash.child_chain.__init__ import create_app
+from plasma_cash.child_chain import create_app
 from unit_tests.unstub_mixin import UnstubMixin
 
 
@@ -10,7 +10,7 @@ class TestServer(UnstubMixin):
 
     @pytest.fixture(scope='function')
     def app(self):
-        (when('plasma_cash.child_chain.__init__.container')
+        (when('plasma_cash.child_chain.container')
             .get_child_chain().thenReturn(self.CHILD_CHAIN))
         app = create_app()
         app.config['TESTING'] = True

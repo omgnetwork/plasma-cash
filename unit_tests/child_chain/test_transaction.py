@@ -1,5 +1,5 @@
 import pytest
-from mockito import patch
+from mockito import when
 
 from plasma_cash.child_chain.transaction import Transaction
 from unit_tests.unstub_mixin import UnstubMixin
@@ -59,15 +59,18 @@ class TestTransaction(UnstubMixin):
                        b'\x98\x1e\xcb\t\xcb\x08\n\xd1\r6\x85\x0b\x19')
         assert tx.merkle_hash == MERKLE_HASH
 
+    def test_sender(self, tx):
+        DUMMY_SENDER = 'sender'
+        (when('plasma_cash.child_chain.transaction')
+            .get_sender(tx.hash, tx.sig)
+            .thenReturn(DUMMY_SENDER))
+
+        assert tx.sender == DUMMY_SENDER
+
     def test_sign(self, tx):
         SIGNATURE = 'signature'
         DUMMY_KEY = 'key'
-
-        def sign_func(hash, key):
-            if hash == tx.hash and key == DUMMY_KEY:
-                return SIGNATURE
-            raise Exception('unexpected input to patch sign_func')
-
-        patch('plasma_cash.child_chain.transaction.sign', sign_func)
+        (when('plasma_cash.child_chain.transaction')
+            .sign(tx.hash, DUMMY_KEY).thenReturn(SIGNATURE))
         tx.sign(DUMMY_KEY)
         assert tx.sig == SIGNATURE

@@ -1,0 +1,21 @@
+from plasma_cash.utils.utils import get_sender, sign
+
+
+class TestUtils(object):
+
+    def test_sign(self):
+        hash_val = b'0' * 32
+        key = b'0' * 32
+        sig = (b'\xf6\x12[\x1b\x04\xe6\xdb\xcb\xe5\xd2\x88\xe41\x89J\xb5\x83\x18\x11\xa8'
+               b'A\xed\xfcRK\x9c5i{\xbd\xab|r\xdb\xeeX\x1dp\x9a\xb6\x0e\\<\xa2X\x81\x17\xc5'
+               b'$\xfa\x86i\xe3\xf5\xc0\xd1\xd9d}+\x8f\xceqE\x1c')
+        assert sign(hash_val, key) == sig
+
+    def test_get_sender(self):
+        hash_val = b'0' * 32
+        sig = (b'\xf6\x12[\x1b\x04\xe6\xdb\xcb\xe5\xd2\x88\xe41\x89J\xb5\x83\x18\x11\xa8'
+               b'A\xed\xfcRK\x9c5i{\xbd\xab|r\xdb\xeeX\x1dp\x9a\xb6\x0e\\<\xa2X\x81\x17\xc5'
+               b'$\xfa\x86i\xe3\xf5\xc0\xd1\xd9d}+\x8f\xceqE\x1c')
+
+        expected_sender = b'\x82{D\xd5=\xf2\x85@Wq;%\xcd\xd6S\xebp\xfe6\xc4'
+        assert get_sender(hash_val, sig) == expected_sender
