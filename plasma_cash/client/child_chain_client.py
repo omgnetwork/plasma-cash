@@ -33,6 +33,17 @@ class ChildChainClient(object):
         response = self.request(end_point, 'GET')
         return response.text
 
+    def get_block(self, blknum):
+        end_point = '/block/{}'.format(blknum)
+        response = self.request(end_point, 'GET')
+        return response.text
+
+    def get_tx_proof(self, blknum, uid):
+        end_point = '/proof'
+        params = {'blknum': blknum, 'uid': uid}
+        response = self.request(end_point, 'GET', params=params)
+        return response.text
+
     def submit_block(self, sig):
         end_point = '/submit_block'
         data = {'sig': sig}

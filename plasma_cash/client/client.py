@@ -31,3 +31,10 @@ class Client(object):
     def get_current_block(self):
         block = self.child_chain.get_current_block()
         return rlp.decode(utils.decode_hex(block), Block)
+
+    def get_block(self, blknum):
+        block = self.child_chain.get_block(blknum)
+        return rlp.decode(utils.decode_hex(block), Block)
+
+    def get_tx_proof(self, blknum, uid):
+        return self.child_chain.get_tx_proof(blknum, uid)
