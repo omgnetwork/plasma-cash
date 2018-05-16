@@ -1,12 +1,13 @@
 from flask import Flask
-from plasma_cash.dependency_config import container
 
 
-def create_app():
+def create_app(is_unit_test=False):
     app = Flask(__name__)
 
-    # Create a child chain instance when creating a Flask app.
-    container.get_child_chain()
+    if not is_unit_test:
+        from plasma_cash.dependency_config import container
+        # Create a child chain instance when creating a Flask app.
+        container.get_child_chain()
 
     from . import server
     app.register_blueprint(server.bp)
