@@ -10,9 +10,7 @@ class TestServer(UnstubMixin):
 
     @pytest.fixture(scope='function')
     def app(self):
-        (when('plasma_cash.child_chain.container')
-            .get_child_chain().thenReturn(self.CHILD_CHAIN))
-        app = create_app()
+        app = create_app(is_unit_test=True)
         app.config['TESTING'] = True
         return app
 
