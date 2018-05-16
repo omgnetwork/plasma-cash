@@ -36,8 +36,8 @@ class Client(object):
         block = self.child_chain.get_block(blknum)
         return rlp.decode(utils.decode_hex(block), Block)
 
-    def get_tx_proof(self, blknum, uid):
-        return self.child_chain.get_tx_proof(blknum, uid)
+    def get_proof(self, blknum, uid):
+        return self.child_chain.get_proof(blknum, uid)
 
     def start_exit(self, exitor, uid, prev_tx_blk_num, tx_blk_num):
         # TODO: Getting the whole block doesn't meet the design concept of plasma cash.
@@ -45,6 +45,7 @@ class Client(object):
         #       before. When exiting, client should have enough information and only query from its
         #       databse. For now, it's just for convenience. When the exchange mechanism between
         #       clients are built, this part should be modified.
+        #       issue: https://github.com/omisego/plasma-cash/issues/43
         prev_block = self.get_block(prev_tx_blk_num)
         block = self.get_block(tx_blk_num)
 
@@ -56,4 +57,9 @@ class Client(object):
         block.merklize_transaction_set()
         tx_proof = block.merkle.create_merkle_proof(uid)
 
-        self.root_chain.transact({'from': exitor}).startExit(rlp.encode(prev_tx), prev_tx_proof, prev_tx_blk_num, rlp.encode(tx), tx_proof, tx_blk_num)
+        self.root_chain.transact({'from': exitor}).startExit(rlp.encode(prev_tx),
+                                                             prev_tx_proof,
+                                                             prev_tx_blk_num,
+                                                             rlp.encode(tx),
+                                                             tx_proof,
+                                                             tx_blk_num)

@@ -148,3 +148,18 @@ class TestChildChain(UnstubMixin):
     def test_get_current_block(self, child_chain):
         expected = rlp.encode(child_chain.current_block).hex()
         assert expected == child_chain.get_current_block()
+
+    def test_get_block(self, child_chain):
+        DUMMY_BLK_NUM = 1
+
+        expected = rlp.encode(child_chain.blocks[DUMMY_BLK_NUM]).hex()
+        assert expected == child_chain.get_block(DUMMY_BLK_NUM)
+
+    def test_get_proof(self, child_chain):
+        DUMMY_BLK_NUM = 1
+        DUMMY_UID = 1
+
+        block = child_chain.blocks[DUMMY_BLK_NUM]
+        block.merklize_transaction_set()
+        expected_proof = block.merkle.create_merkle_proof(DUMMY_UID)
+        assert expected_proof == child_chain.get_proof(DUMMY_BLK_NUM, DUMMY_UID)

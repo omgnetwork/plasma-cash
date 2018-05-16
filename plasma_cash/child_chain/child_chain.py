@@ -70,7 +70,7 @@ class ChildChain(object):
         return rlp.encode(self.current_block).hex()
 
     def get_block(self, blknum):
-        return rlp.encode(self.blocks[int(blknum)]).hex()
+        return rlp.encode(self.blocks[blknum]).hex()
 
-    def get_tx_proof(self, blknum, uid):
-        return self.blocks[int(blknum)].merkle.create_merkle_proof(int(uid))
+    def get_proof(self, blknum, uid):
+        return self.blocks[blknum].merkle.create_merkle_proof(uid)

@@ -55,8 +55,8 @@ class TestTransaction(UnstubMixin):
         assert tx.hash == TX_HASH
 
     def test_merkle_hash(self, tx):
-        MERKLE_HASH = (b'\xaai8\x00\x9fJ \xde\xb8<h\x97S\x1d\x9d\xf6y\xfb\x8a'
-                       b'\x98\x1e\xcb\t\xcb\x08\n\xd1\r6\x85\x0b\x19')
+        MERKLE_HASH = (b'\xc2\xee\xdb@\xc0r\xfc\x0e\x18GW\xc7\xdb\x81\x8c\x83z\x10\xef\x12'
+                       b"\xfb#'\x96\x7fE\x02\x92\xb6\xf4\x80\xea")
         assert tx.merkle_hash == MERKLE_HASH
 
     def test_sender(self, tx):

@@ -38,7 +38,7 @@ class ChildChainClient(object):
         response = self.request(end_point, 'GET')
         return response.text
 
-    def get_tx_proof(self, blknum, uid):
+    def get_proof(self, blknum, uid):
         end_point = '/proof'
         params = {'blknum': blknum, 'uid': uid}
         response = self.request(end_point, 'GET', params=params)

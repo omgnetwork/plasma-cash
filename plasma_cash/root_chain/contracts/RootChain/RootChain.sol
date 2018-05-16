@@ -84,6 +84,7 @@ contract RootChain {
 
         // TODO: Should optimize these lines with more readability.
         // TODO: Should check the transaction signature.
+        // issue: https://github.com/omisego/plasma-cash/issues/42
         require(prevTxBlkNum == txList[0].toUint());
         require(prevTxList[1].toUint() == txList[1].toUint());
         require(txList[2].toUint() == txList[2].toUint());

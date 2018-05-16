@@ -104,3 +104,75 @@ class TestClient(UnstubMixin):
             .thenReturn(DUMMY_DECODED_BLOCK))
 
         assert client.get_current_block() == DUMMY_DECODED_BLOCK
+
+    def test_get_block(self, child_chain, client):
+        DUMMY_BLOCK = 'dummy block'
+        DUMMY_BLOCK_NUM = 'dummy block num'
+        DUMMY_BLOCK_HEX = 'dummy block hex'
+        DUMMY_DECODED_BLOCK = 'decoded block'
+
+        when(child_chain).get_block(DUMMY_BLOCK_NUM).thenReturn(DUMMY_BLOCK)
+        (when('plasma_cash.client.client.utils')
+            .decode_hex(DUMMY_BLOCK)
+            .thenReturn(DUMMY_BLOCK_HEX))
+        (when('plasma_cash.client.client.rlp')
+            .decode(DUMMY_BLOCK_HEX, Block)
+            .thenReturn(DUMMY_DECODED_BLOCK))
+
+        assert client.get_block(DUMMY_BLOCK_NUM) == DUMMY_DECODED_BLOCK
+
+    def test_get_proof(self, child_chain, client):
+        DUMMY_BLOCK_NUM = 'dummy block num'
+        DUMMY_PROOF = 'dummy proof'
+        DUMMY_UID = 'dummy uid'
+
+        when(child_chain).get_proof(DUMMY_BLOCK_NUM, DUMMY_UID).thenReturn(DUMMY_PROOF)
+        assert client.get_proof(DUMMY_BLOCK_NUM, DUMMY_UID) == DUMMY_PROOF
+
+    def test_start_exit(self, client, root_chain):
+        MOCK_TRANSACT = mock()
+        MOCK_PREVIOUS_BLOCK = mock()
+        MOCK_BLOCK = mock()
+
+        DUMMY_EXITOR = 'dummy exitor'
+        DUMMY_PREVIOUS_TX = 'dummy previous tx'
+        DUMMY_ENCODED_PREVIOUS_TX = 'dummy encoded previous tx'
+        DUMMY_PREVIOUS_TX_PROOF = 'dummy previous tx proof'
+        DUMMY_PREVIOUS_TX_BLK_NUM = 'dummy previous tx blk num'
+        DUMMY_TX = 'dummy tx'
+        DUMMY_ENCODED_TX = 'dummy encoded tx'
+        DUMMY_TX_PROOF = 'dummy tx proof'
+        DUMMY_TX_BLK_NUM = 'dummy tx blk num'
+        DUMMY_UID = 'dummy uid'
+
+        when(root_chain).transact({'from': DUMMY_EXITOR}).thenReturn(MOCK_TRANSACT)
+        when(client).get_block(DUMMY_PREVIOUS_TX_BLK_NUM).thenReturn(MOCK_PREVIOUS_BLOCK)
+        when(client).get_block(DUMMY_TX_BLK_NUM).thenReturn(MOCK_BLOCK)
+        when(MOCK_PREVIOUS_BLOCK).get_tx_by_uid(DUMMY_UID).thenReturn(DUMMY_PREVIOUS_TX)
+        when(MOCK_BLOCK).get_tx_by_uid(DUMMY_UID).thenReturn(DUMMY_TX)
+
+        MOCK_PREVIOUS_BLOCK.merkle = mock()
+        MOCK_BLOCK.merkle = mock()
+        (when(MOCK_PREVIOUS_BLOCK.merkle)
+            .create_merkle_proof(DUMMY_UID)
+            .thenReturn(DUMMY_PREVIOUS_TX_PROOF))
+        (when(MOCK_BLOCK.merkle)
+            .create_merkle_proof(DUMMY_UID)
+            .thenReturn(DUMMY_TX_PROOF))
+        (when('plasma_cash.client.client.rlp')
+            .encode(DUMMY_PREVIOUS_TX)
+            .thenReturn(DUMMY_ENCODED_PREVIOUS_TX))
+        (when('plasma_cash.client.client.rlp')
+            .encode(DUMMY_TX)
+            .thenReturn(DUMMY_ENCODED_TX))
+
+        client.start_exit(DUMMY_EXITOR, DUMMY_UID, DUMMY_PREVIOUS_TX_BLK_NUM, DUMMY_TX_BLK_NUM)
+
+        verify(MOCK_TRANSACT).startExit(
+            DUMMY_ENCODED_PREVIOUS_TX,
+            DUMMY_PREVIOUS_TX_PROOF,
+            DUMMY_PREVIOUS_TX_BLK_NUM,
+            DUMMY_ENCODED_TX,
+            DUMMY_TX_PROOF,
+            DUMMY_TX_BLK_NUM
+        )

@@ -12,14 +12,14 @@ def get_current_block():
 
 @bp.route('/block/<blknum>', methods=['GET'])
 def get_block(blknum):
-    return container.get_child_chain().get_block(blknum)
+    return container.get_child_chain().get_block(int(blknum))
 
 
 @bp.route('/proof', methods=['GET'])
-def get_tx_proof():
-    blknum = request.args.get('blknum')
-    uid = request.args.get('uid')
-    return container.get_child_chain().get_tx_proof(blknum, uid)
+def get_proof():
+    blknum = int(request.args.get('blknum'))
+    uid = int(request.args.get('uid'))
+    return container.get_child_chain().get_proof(blknum, uid)
 
 
 @bp.route('/submit_block', methods=['POST'])
