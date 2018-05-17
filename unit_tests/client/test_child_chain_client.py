@@ -94,6 +94,26 @@ class TestChildChainClient(UnstubMixin):
         resp = client.get_current_block()
         assert resp == RESP_TEXT
 
+    def test_get_block(self, client):
+        RESP_TEXT = 'response text'
+        MOCK_RESP = mock({'text': RESP_TEXT})
+        DUMMY_BLK_NUM = 1
+
+        when(client).request('/block/{}'.format(DUMMY_BLK_NUM), 'GET').thenReturn(MOCK_RESP)
+        resp = client.get_block(DUMMY_BLK_NUM)
+        assert resp == RESP_TEXT
+
+    def test_get_proof(self, client):
+        RESP_TEXT = 'response text'
+        MOCK_RESP = mock({'text': RESP_TEXT})
+        DUMMY_BLK_NUM = 1
+        DUMMY_UID = 1
+
+        params = {'blknum': DUMMY_BLK_NUM, 'uid': DUMMY_UID}
+        when(client).request('/proof', 'GET', params=params).thenReturn(MOCK_RESP)
+        resp = client.get_proof(DUMMY_BLK_NUM, DUMMY_UID)
+        assert resp == RESP_TEXT
+
     def test_submit_block(self, client):
         DUMMY_SIG = 'sig'
         when(client).request(any, any, data=any).thenReturn(None)

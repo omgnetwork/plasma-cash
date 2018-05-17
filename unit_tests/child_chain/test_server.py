@@ -28,6 +28,29 @@ class TestServer(UnstubMixin):
         resp = client.get('block')
         assert resp.data == DUMMY_BLOCK.encode()
 
+    def test_get_block(self, client):
+        (when('plasma_cash.child_chain.server.container')
+            .get_child_chain().thenReturn(self.CHILD_CHAIN))
+
+        DUMMY_BLK_NUM = 1
+        DUMMY_BLOCK = 'block'
+        when(self.CHILD_CHAIN).get_block(DUMMY_BLK_NUM).thenReturn(DUMMY_BLOCK)
+
+        resp = client.get('block/1')
+        assert resp.data == DUMMY_BLOCK.encode()
+
+    def test_get_proof(self, client):
+        (when('plasma_cash.child_chain.server.container')
+            .get_child_chain().thenReturn(self.CHILD_CHAIN))
+
+        DUMMY_PROOF = 'proof'
+        DUMMY_BLK_NUM = 1
+        DUMMY_UID = 1
+        when(self.CHILD_CHAIN).get_proof(DUMMY_BLK_NUM, DUMMY_UID).thenReturn(DUMMY_PROOF)
+
+        resp = client.get('/proof', query_string={'blknum': 1, 'uid': 1})
+        assert resp.data == DUMMY_PROOF.encode()
+
     def test_submit_block(self, client):
         (when('plasma_cash.child_chain.server.container')
             .get_child_chain().thenReturn(self.CHILD_CHAIN))

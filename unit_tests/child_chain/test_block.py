@@ -35,8 +35,8 @@ class TestBlock(object):
         assert block.hash == EXPECTED_HASH
 
     def test_merklize_transaction_set(self, block):
-        EXPECTED_MERKLE_ROOT = (b'\x8b\x9d\xc6l\xe8\x1a#\xb6y\xfb\xb5\xc4\x98'
-                                b'\xa7\xaa\xc1\x04\xa3>\xb3\xc0p8\xa8%\xb1\xa1F2\xa3w\xa6')
+        EXPECTED_MERKLE_ROOT = (b'\x0b\x87\xba\x13\xe4\rh2\xe3\xdc\x9c@\x1f>c\x0c\x80/\xaa\x1e'
+                                b'\x82]\x0e\xad@\xbacr\xa0\x06\x08}')
         assert block.merklize_transaction_set() == EXPECTED_MERKLE_ROOT
 
     def test_add_tx(self, block):

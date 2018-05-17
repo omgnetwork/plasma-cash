@@ -30,7 +30,7 @@ class Transaction(rlp.Serializable):
 
     @property
     def merkle_hash(self):
-        return utils.sha3(self.hash + self.sig)
+        return utils.sha3(rlp.encode(self))
 
     @property
     def sender(self):
