@@ -3,6 +3,7 @@ from plasma_cash.client.child_chain_client import ChildChainClient
 from plasma_cash.client.client import Client
 from plasma_cash.config import plasma_config
 from plasma_cash.root_chain.deployer import Deployer
+from plasma_cash.utils.db.memory_db import MemoryDb
 
 
 class DependencyContainer(object):
@@ -11,6 +12,10 @@ class DependencyContainer(object):
         self._child_chain = None
         self._child_chain_client = None
         self._client = None
+
+    def get_db(self):
+        # TODO: enable real_db type & memory_db chosen by config
+        return MemoryDb()
 
     def get_root_chain(self):
         if self._root_chain is None:
@@ -21,7 +26,8 @@ class DependencyContainer(object):
         if self._child_chain is None:
             authority = plasma_config['AUTHORITY']
             root_chain = self.get_root_chain()
-            self._child_chain = ChildChain(authority, root_chain)
+            db = self.get_db()
+            self._child_chain = ChildChain(authority, root_chain, db)
         return self._child_chain
 
     def get_child_chain_client(self):
