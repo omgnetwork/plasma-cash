@@ -13,10 +13,10 @@ from .transaction import Transaction
 
 class ChildChain(object):
 
-    def __init__(self, authority, root_chain):
+    def __init__(self, authority, root_chain, db):
         self.root_chain = root_chain
         self.authority = authority
-        self.blocks = {}
+        self.db = db
         self.current_block = Block()
         self.current_block_number = 1
 
@@ -43,7 +43,7 @@ class ChildChain(object):
             {'from': '0x' + self.authority.hex()}
         ).submitBlock(merkle_hash, self.current_block_number)
 
-        self.blocks[self.current_block_number] = self.current_block
+        self.db.save_block(self.current_block, self.current_block_number)
         self.current_block_number += 1
         self.current_block = Block()
 
@@ -52,7 +52,7 @@ class ChildChain(object):
     def apply_transaction(self, transaction):
         tx = rlp.decode(utils.decode_hex(transaction), Transaction)
 
-        prev_tx = self.blocks[tx.prev_block].get_tx_by_uid(tx.uid)
+        prev_tx = self.db.get_block(tx.prev_block).get_tx_by_uid(tx.uid)
         if prev_tx is None:
             raise PreviousTxNotFoundException('failed to apply transaction')
         if prev_tx.spent:
@@ -70,7 +70,9 @@ class ChildChain(object):
         return rlp.encode(self.current_block).hex()
 
     def get_block(self, blknum):
-        return rlp.encode(self.blocks[blknum]).hex()
+        block = self.db.get_block(blknum)
+        return rlp.encode(block).hex()
 
     def get_proof(self, blknum, uid):
-        return self.blocks[blknum].merkle.create_merkle_proof(uid)
+        block = self.db.get_block(blknum)
+        return block.merkle.create_merkle_proof(uid)
