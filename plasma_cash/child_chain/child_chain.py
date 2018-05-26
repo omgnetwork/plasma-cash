@@ -18,7 +18,7 @@ class ChildChain(object):
         self.authority = authority
         self.db = db
         self.current_block = Block()
-        self.current_block_number = 1
+        self.current_block_number = self.db.get_current_block_num()
 
         # Register for deposit event listener
         deposit_filter = self.root_chain.on('Deposit')
@@ -44,7 +44,7 @@ class ChildChain(object):
         ).submitBlock(merkle_hash, self.current_block_number)
 
         self.db.save_block(self.current_block, self.current_block_number)
-        self.current_block_number += 1
+        self.current_block_number = self.db.increment_current_block_num()
         self.current_block = Block()
 
         return merkle_hash

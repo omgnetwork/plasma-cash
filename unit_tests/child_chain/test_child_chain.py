@@ -42,6 +42,7 @@ class TestChildChain(UnstubMixin):
         # create a block with the dummy transaction
         db.save_block(Block([tx]), 1)
         child_chain.current_block_number = 2
+        db.increment_current_block_num()
         return child_chain
 
     def test_constructor(self, root_chain, db):

@@ -1,8 +1,11 @@
+import os
+
 from plasma_cash.child_chain.child_chain import ChildChain
 from plasma_cash.client.child_chain_client import ChildChainClient
 from plasma_cash.client.client import Client
-from plasma_cash.config import plasma_config
+from plasma_cash.config import PROJECT_DIR, db_config, plasma_config
 from plasma_cash.root_chain.deployer import Deployer
+from plasma_cash.utils.db.leveldb import LevelDb
 from plasma_cash.utils.db.memory_db import MemoryDb
 
 
@@ -15,9 +18,19 @@ class DependencyContainer(object):
         self._db = None
 
     def get_db(self):
-        # TODO: enable real_db type & memory_db chosen by config
         if self._db is None:
-            self._db = MemoryDb()
+            db_type = db_config['type']
+            if db_type == 'memory':
+                self._db = MemoryDb()
+            elif db_type == 'leveldb':
+                if db_config.get('path'):
+                    path = db_config['path']
+                else:
+                    path = os.path.join(PROJECT_DIR, '.db')
+                self._db = LevelDb(path)
+            else:
+                raise ValueError('type of {} is not supported'.format(db_type))
+
         return self._db
 
     def get_root_chain(self):

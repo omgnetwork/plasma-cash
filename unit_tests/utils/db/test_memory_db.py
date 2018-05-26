@@ -24,3 +24,12 @@ class TestMemoryDb(object):
         db.save_block('first block', DUMMY_BLK_NUM)
         with pytest.raises(BlockAlreadyExistsException):
             db.save_block('second block should fail', DUMMY_BLK_NUM)
+
+    def test_get_current_block_num_first_time_return_1(self, db):
+        assert db.get_current_block_num() == 1
+
+    def test_increment_current_block_num(self, db):
+        block_num = db.get_current_block_num()
+        db.increment_current_block_num()
+        block_num_incr = db.get_current_block_num()
+        assert block_num_incr == block_num + 1

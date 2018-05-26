@@ -1,5 +1,28 @@
 # plasma-cash
 
+### Dependency Prerequisite
+
+- [LevelDB](https://github.com/google/leveldb)
+
+Mac:
+```
+$ brew install leveldb
+```
+
+Linux:
+
+LevelDB should be installed along with `plyvel` once you make the project later on.
+
+Windows:
+
+First, install [vcpkg](https://github.com/Microsoft/vcpkg). Then,
+
+```
+> vcpkg install leveldb
+```
+
+### Develop
+
 Install requirements:
 ```
 pip install -r requirements.txt
