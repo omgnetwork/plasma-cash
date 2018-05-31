@@ -1,14 +1,12 @@
 pragma solidity ^0.4.18;
 
 import 'merkle.sol';
-import 'RLP.sol';
+import 'Transaction.sol';
 
 
 contract RootChain {
     using Merkle for bytes32;
-    using RLP for bytes;
-    using RLP for RLP.RLPItem;
-    using RLP for RLP.Iterator;
+    using Transaction for bytes;
 
     /*
      * Events
@@ -67,6 +65,13 @@ contract RootChain {
         Deposit(msg.sender, amount, uint256(uid));
     }
 
+    // @dev Starts to exit a transaction
+    // @param prevTx The previous transaction in bytes of the transaction that user wants to exit
+    // @param prevTxProof The proof of the prevTx
+    // @param prevTxBlkNum The block number of the prevTx
+    // @param tx The transaction in bytes that user wants to exit
+    // @param txProof The proof of the tx
+    // @param txBlkNum The block number of the tx
     function startExit(
         bytes prevTx,
         bytes prevTxProof,
@@ -77,29 +82,24 @@ contract RootChain {
     )
         public
     {
-        var prevTxList = prevTx.toRLPItem().toList();
-        var txList = tx.toRLPItem().toList();
-        require(prevTxList.length == 5);
-        require(txList.length == 5);
+        Transaction.Tx memory prevTxObj = prevTx.createTx();
+        Transaction.Tx memory txObj = tx.createTx();
 
-        // TODO: Should optimize these lines with more readability.
-        // TODO: Should check the transaction signature.
-        // issue: https://github.com/omisego/plasma-cash/issues/42
-        require(prevTxBlkNum == txList[0].toUint());
-        require(prevTxList[1].toUint() == txList[1].toUint());
-        require(txList[2].toUint() == txList[2].toUint());
-        require(msg.sender == txList[3].toAddress());
-        uint uid = txList[1].toUint();
+        require(prevTxBlkNum == txObj.prevBlock);
+        require(prevTxObj.uid == txObj.uid);
+        require(prevTxObj.amount == txObj.amount);
+        require(prevTxObj.newOwner == txObj.signer);
+        require(msg.sender == txObj.newOwner);
 
         bytes32 prevMerkleHash = sha3(prevTx);
         bytes32 prevRoot = childChain[prevTxBlkNum];
         bytes32 merkleHash = sha3(tx);
         bytes32 root = childChain[txBlkNum];
-        require(prevMerkleHash.checkMembership(uid, prevRoot, prevTxProof));
-        require(merkleHash.checkMembership(uid, root, txProof));
+        require(prevMerkleHash.checkMembership(prevTxObj.uid, prevRoot, prevTxProof));
+        require(merkleHash.checkMembership(txObj.uid, root, txProof));
 
         // Record the exitable timestamp.
-        require(exits[uid] == 0);
-        exits[uid] = block.timestamp + 2 weeks;
+        require(exits[txObj.uid] == 0);
+        exits[txObj.uid] = block.timestamp + 2 weeks;
     }
 }
