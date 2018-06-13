@@ -56,9 +56,13 @@ contract RootChain {
     // @param currency The address of currency or zero if deposit Eth
     // @param amount The amount of currency to deposit
     function deposit(address currency, uint amount)
+        payable
         public
     {
         // TODO: handle the currency address if it's not zero
+        if (currency == address(0)) {
+            require(amount * 10**18 == msg.value);
+        }
         bytes32 uid = keccak256(currency, msg.sender, depositCount);
         wallet[uid] = amount;
         depositCount += 1;
