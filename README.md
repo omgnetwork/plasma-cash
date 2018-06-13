@@ -32,13 +32,19 @@ python
 >>> c.start_exit('0x08d92dca9038ea9433254996a2d4f08d43be8227', 1693390459388381052156419331572168595237271043726428428352746834777341368960, 1, 2)
 ```
 
-Run tests:
+Run unit tests:
 ```
 pytest unit_tests
+```
+
+Run integration tests:
+```
+behave integration_tests/features/
 ```
 
 Run linter:
 ```
 flake8 plasma_cash/
 flake8 unit_tests/
+flake8 integration_tests/
 ```
