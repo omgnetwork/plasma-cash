@@ -1,6 +1,8 @@
 import rlp
 from ethereum import utils
 
+from web3 import Web3
+
 from plasma_cash.child_chain.block import Block
 from plasma_cash.child_chain.transaction import Transaction
 from plasma_cash.utils.utils import sign
@@ -13,7 +15,8 @@ class Client(object):
         self.child_chain = child_chain
 
     def deposit(self, amount, depositor, currency):
-        self.root_chain.transact({'from': depositor}).deposit(currency, amount)
+        value = Web3.toWei(amount, 'ether') if currency == '0x' + '00' * 20 else 0
+        self.root_chain.transact({'from': depositor, 'value': value}).deposit(currency, amount)
 
     def submit_block(self, key):
         key = utils.normalize_key(key)
