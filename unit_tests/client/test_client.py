@@ -1,5 +1,5 @@
 import pytest
-from mockito import any, mock, verify, when
+from mockito import ANY, mock, verify, when
 
 from plasma_cash.child_chain.block import Block
 from plasma_cash.client.client import Client
@@ -33,7 +33,7 @@ class TestClient(UnstubMixin):
         DUMMY_DEPOSITOR = 'dummy depositor'
         DUMMY_CURRENCY = 'dummy currency'
 
-        when(root_chain).transact({'from': DUMMY_DEPOSITOR}).thenReturn(MOCK_TRANSACT)
+        when(root_chain).transact(ANY).thenReturn(MOCK_TRANSACT)
 
         client.deposit(DUMMY_AMOUNT, DUMMY_DEPOSITOR, DUMMY_CURRENCY)
 
@@ -77,7 +77,7 @@ class TestClient(UnstubMixin):
 
         # `Transaction` is mocked previously, so use `any` here as a work around
         (when('plasma_cash.client.client.rlp')
-            .encode(MOCK_TX, any)
+            .encode(MOCK_TX, ANY)
             .thenReturn(MOCK_ENCODED_TX))
 
         client.send_transaction(
