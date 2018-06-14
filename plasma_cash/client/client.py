@@ -1,6 +1,5 @@
 import rlp
 from ethereum import utils
-
 from web3 import Web3
 
 from plasma_cash.child_chain.block import Block

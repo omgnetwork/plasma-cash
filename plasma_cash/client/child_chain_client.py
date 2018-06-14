@@ -26,7 +26,9 @@ class ChildChainClient(object):
         if response.ok:
             return response
         else:
-            raise RequestFailedException('failed with response: {}'.format(response))
+            raise RequestFailedException(
+                'failed reason: {}, text: {}'.format(response.reason, response.text)
+            )
 
     def get_current_block(self):
         end_point = '/block'

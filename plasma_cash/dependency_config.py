@@ -12,10 +12,13 @@ class DependencyContainer(object):
         self._child_chain = None
         self._child_chain_client = None
         self._client = None
+        self._db = None
 
     def get_db(self):
         # TODO: enable real_db type & memory_db chosen by config
-        return MemoryDb()
+        if self._db is None:
+            self._db = MemoryDb()
+        return self._db
 
     def get_root_chain(self):
         if self._root_chain is None:
