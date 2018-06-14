@@ -1,5 +1,9 @@
 import rlp
+import time
+
 from ethereum import utils
+from threading import Thread
+from web3.auto import w3
 
 from plasma_cash.utils.utils import get_sender
 
@@ -20,9 +24,16 @@ class ChildChain(object):
         self.current_block = Block()
         self.current_block_number = self.db.get_current_block_num()
 
-        # Register for deposit event listener
-        deposit_filter = self.root_chain.on('Deposit')
-        deposit_filter.watch(self.apply_deposit)
+        # Register a filter for deposit event
+        deposit_filter = self.root_chain.eventFilter('Deposit', {'fromBlock': 0})
+        worker = Thread(target=self.log_loop, args=(deposit_filter, 1), daemon=True)
+        worker.start()
+
+    def log_loop(self, event_filter, poll_interval):
+        while True:
+            for event in event_filter.get_new_entries():
+                self.apply_deposit(event)
+            time.sleep(poll_interval)
 
     def apply_deposit(self, event):
         new_owner = utils.normalize_address(event['args']['depositor'])
@@ -39,9 +50,10 @@ class ChildChain(object):
 
         merkle_hash = self.current_block.merklize_transaction_set()
 
-        self.root_chain.transact(
-            {'from': '0x' + self.authority.hex()}
-        ).submitBlock(merkle_hash, self.current_block_number)
+        authority_address = w3.toChecksumAddress('0x' + self.authority.hex())
+        self.root_chain.functions.submitBlock(merkle_hash, self.current_block_number).transact(
+            {'from': authority_address}
+        )
 
         self.db.save_block(self.current_block, self.current_block_number)
         self.current_block_number = self.db.increment_current_block_num()

@@ -13,7 +13,7 @@ def before_scenario(context, step):
     global root_chain_process
     global child_chain_process
     root_chain_process = spin_up_root_chain()
-    time.sleep(1)
+    time.sleep(5)
     deploy_contracts()
     time.sleep(1)
     child_chain_process = spin_up_child_chain_server()
@@ -36,7 +36,6 @@ def deploy_contracts():
 def spin_up_child_chain_server():
     my_env = os.environ.copy()
     my_env.update({
-        'FLASK_APP': 'plasma_cash/child_chain',
-        'FLASK_ENV': 'development',
+        'FLASK_APP': 'plasma_cash/child_chain'
     })
     return Popen(['flask', 'run', '--port=8546'], env=my_env, preexec_fn=os.setsid)

@@ -1,5 +1,6 @@
 import pytest
 from mockito import ANY, mock, verify, when
+from web3.auto import w3
 
 from plasma_cash.child_chain.block import Block
 from plasma_cash.client.client import Client
@@ -10,7 +11,9 @@ class TestClient(UnstubMixin):
 
     @pytest.fixture(scope='function')
     def root_chain(self):
-        return mock()
+        root_chain = mock()
+        root_chain.functions = mock()
+        return root_chain
 
     @pytest.fixture(scope='function')
     def child_chain(self):
@@ -33,11 +36,12 @@ class TestClient(UnstubMixin):
         DUMMY_DEPOSITOR = 'dummy depositor'
         DUMMY_CURRENCY = 'dummy currency'
 
-        when(root_chain).transact(ANY).thenReturn(MOCK_TRANSACT)
+        when(w3).toChecksumAddress(DUMMY_DEPOSITOR).thenReturn(DUMMY_DEPOSITOR)
+        when(root_chain.functions).deposit(DUMMY_CURRENCY, DUMMY_AMOUNT).thenReturn(MOCK_TRANSACT)
 
         client.deposit(DUMMY_AMOUNT, DUMMY_DEPOSITOR, DUMMY_CURRENCY)
 
-        verify(MOCK_TRANSACT).deposit(DUMMY_CURRENCY, DUMMY_AMOUNT)
+        verify(MOCK_TRANSACT).transact(ANY)
 
     def test_submit_block(self, client, child_chain):
         MOCK_HASH = 'mock hash'
@@ -145,7 +149,15 @@ class TestClient(UnstubMixin):
         DUMMY_TX_BLK_NUM = 'dummy tx blk num'
         DUMMY_UID = 'dummy uid'
 
-        when(root_chain).transact({'from': DUMMY_EXITOR}).thenReturn(MOCK_TRANSACT)
+        when(w3).toChecksumAddress(DUMMY_EXITOR).thenReturn(DUMMY_EXITOR)
+        when(root_chain.functions).startExit(
+            DUMMY_ENCODED_PREVIOUS_TX,
+            DUMMY_PREVIOUS_TX_PROOF,
+            DUMMY_PREVIOUS_TX_BLK_NUM,
+            DUMMY_ENCODED_TX,
+            DUMMY_TX_PROOF,
+            DUMMY_TX_BLK_NUM
+        ).thenReturn(MOCK_TRANSACT)
         when(client).get_block(DUMMY_PREVIOUS_TX_BLK_NUM).thenReturn(MOCK_PREVIOUS_BLOCK)
         when(client).get_block(DUMMY_TX_BLK_NUM).thenReturn(MOCK_BLOCK)
         when(MOCK_PREVIOUS_BLOCK).get_tx_by_uid(DUMMY_UID).thenReturn(DUMMY_PREVIOUS_TX)
@@ -168,11 +180,4 @@ class TestClient(UnstubMixin):
 
         client.start_exit(DUMMY_EXITOR, DUMMY_UID, DUMMY_PREVIOUS_TX_BLK_NUM, DUMMY_TX_BLK_NUM)
 
-        verify(MOCK_TRANSACT).startExit(
-            DUMMY_ENCODED_PREVIOUS_TX,
-            DUMMY_PREVIOUS_TX_PROOF,
-            DUMMY_PREVIOUS_TX_BLK_NUM,
-            DUMMY_ENCODED_TX,
-            DUMMY_TX_PROOF,
-            DUMMY_TX_BLK_NUM
-        )
+        verify(MOCK_TRANSACT).transact({'from': DUMMY_EXITOR})
