@@ -7,9 +7,6 @@ install:
   - sudo mv solc-static-linux /usr/bin/solc
   - pip install -r requirements.txt
   - npm install -g ganache-cli
-  - ganache-cli -m=plasma_cash > /dev/null &
-  - sleep 5
-  - python deployment.py
 script:
   - pytest unit_tests
   - behave integration_tests/features/
