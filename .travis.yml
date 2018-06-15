@@ -1,0 +1,15 @@
+language: python
+python:
+  - "3.6"
+install:
+  - wget https://github.com/ethereum/solidity/releases/download/v0.4.18/solc-static-linux
+  - chmod +x ./solc-static-linux
+  - sudo mv solc-static-linux /usr/bin/solc
+  - pip install -r requirements.txt
+  - npm install -g ganache-cli
+  - ganache-cli -m=plasma_cash > /dev/null &
+  - sleep 5
+  - python deployment.py
+script:
+  - pytest unit_tests
+  - behave integration_tests/features/
