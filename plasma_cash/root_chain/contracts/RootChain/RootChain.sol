@@ -12,7 +12,6 @@ contract RootChain {
      * Events
      */
     event Deposit(address depositor, uint256 amount, uint256 uid);
-    event StartExit(address exitor, uint256 amount, uint256 uid);
 
     /*
      * Storage
@@ -106,7 +105,5 @@ contract RootChain {
         // Record the exitable timestamp.
         require(exits[txObj.uid] == 0);
         exits[txObj.uid] = block.timestamp + 2 weeks;
-
-        StartExit(msg.sender, txObj.amount, txObj.uid);
     }
 }

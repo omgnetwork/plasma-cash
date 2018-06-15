@@ -1,16 +1,15 @@
 import time
 
 from behave import given, then, when
-from web3 import HTTPProvider, Web3
+from web3.auto import w3
 
 from plasma_cash.dependency_config import container
 
 client = container.get_client()
 root_chain = container.get_root_chain()
-web3 = Web3(HTTPProvider('http://localhost:8545'))
 
-userA = '0xb83e232458a092696be9717045d9a605fb0fec2b'
-userB = '0x08d92dca9038ea9433254996a2d4f08d43be8227'
+userA = '0xb83e232458A092696bE9717045d9A605FB0FEc2b'
+userB = '0x08d92dcA9038eA9433254996a2D4F08D43BE8227'
 userA_key = '0xe4807cf08191b310fe1821e6e5397727ee6bc694e92e25115eca40114e3a4e6b'
 eth_currency = '0x0000000000000000000000000000000000000000'
 submit_block_sig = '0xa18969817c2cefadf52b93eb20f917dce760ce13b2ac9025e0361ad1e7a1d448'
@@ -21,17 +20,17 @@ TRANSFER_TX_BLOCK = 2
 
 
 def address_equals(address1, address2):
-    return Web3.toChecksumAddress(address1) == Web3.toChecksumAddress(address2)
+    return w3.toChecksumAddress(address1) == w3.toChecksumAddress(address2)
 
 
 @given('userA has {amount:d} eth in root chain')
 def userA_has_some_amount_of_eth_in_root_chain(context, amount):
-    userA_balance = web3.eth.getBalance(userA)
+    userA_balance = w3.eth.getBalance(userA)
     assert_msg = 'userA balance in {} does not match expected amount: {} in eth'.format(
-        Web3.fromWei(userA_balance, 'ether'),
+        w3.fromWei(userA_balance, 'ether'),
         amount
     )
-    assert Web3.toWei(amount, 'ether') == userA_balance, assert_msg
+    assert w3.toWei(amount, 'ether') == userA_balance, assert_msg
 
 
 @when('userA deposit {amount:d} eth to plasma')
@@ -47,9 +46,9 @@ def userA_deposit_some_eth_to_plasma(context, amount):
 
 @then('userA has around {amount:d} eth in root chain')
 def userA_has_around_some_amount_of_eth_in_root_chain(context, amount):
-    balance = web3.eth.getBalance(userA)
-    assert_msg = 'balance: {} is not in around: {}'.format(Web3.fromWei(balance, 'ether'), amount)
-    assert Web3.toWei(amount - 0.01, 'ether') <= balance <= Web3.toWei(amount, 'ether'), assert_msg
+    balance = w3.eth.getBalance(userA)
+    assert_msg = 'balance: {} is not in around: {}'.format(w3.fromWei(balance, 'ether'), amount)
+    assert w3.toWei(amount - 0.01, 'ether') <= balance <= w3.toWei(amount, 'ether'), assert_msg
 
 
 @then('userA has {amount:d} eth in the deposit tx in plasma cash')
@@ -88,10 +87,4 @@ def userB_start_exit_some_eth_from_plasma_cash(context, amount):
 
 @then('root chain got userB start exit {amount:d} eth event')
 def root_chain_got_userB_start_exit_event(context, amount):
-    # need to pass in `False` in get()
-    # see: https://github.com/ethereum/web3.py/issues/230
-    events = root_chain.pastEvents('StartExit', {'fromBlock': 1, 'toBlock': 'latest'}).get(False)
-    start_exit_args = events[0]['args']
-    assert address_equals(start_exit_args['exitor'], userB)
-    assert start_exit_args['amount'] == amount
-    assert start_exit_args['uid'] == uid
+    assert root_chain.functions.exits(uid).call({'from': userA}) != 0

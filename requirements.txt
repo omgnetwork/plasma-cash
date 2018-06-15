@@ -1,5 +1,5 @@
 py-solc==2.1.0
-web3==3.16.5
+web3==4.2.0
 Flask==1.0.2
 requests==2.18.4
 rlp==0.6.0

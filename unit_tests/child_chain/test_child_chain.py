@@ -1,7 +1,8 @@
 import pytest
 import rlp
 from ethereum import utils as eth_utils
-from mockito import any, mock, verify, when
+from mockito import ANY, expect, mock, verify, when
+from threading import Thread
 
 from plasma_cash.child_chain.block import Block
 from plasma_cash.child_chain.child_chain import ChildChain
@@ -26,14 +27,16 @@ class TestChildChain(UnstubMixin):
 
     @pytest.fixture(scope='function')
     def root_chain(self):
-        return mock()
+        root_chain = mock()
+        root_chain.functions = mock()
+        return root_chain
 
     @pytest.fixture(scope='function')
     def child_chain(self, root_chain, db):
         DUMMY_TX_OWNER = b'\x8cT\xa4\xa0\x17\x9f$\x80\x1fI\xf92-\xab<\x87\xeb\x19L\x9b'
 
-        deposit_filter = mock()
-        when(root_chain).on('Deposit').thenReturn(deposit_filter)
+        expect(root_chain).eventFilter('Deposit', {'fromBlock': 0})
+        expect(Thread).start()
         child_chain = ChildChain(self.DUMMY_AUTHORITY, root_chain, db)
 
         # create a dummy transaction
@@ -46,13 +49,10 @@ class TestChildChain(UnstubMixin):
         return child_chain
 
     def test_constructor(self, root_chain, db):
-        deposit_filter = mock()
-        when(root_chain).on('Deposit').thenReturn(deposit_filter)
+        expect(root_chain).eventFilter('Deposit', {'fromBlock': 0})
+        expect(Thread).start()
 
         ChildChain(self.DUMMY_AUTHORITY, root_chain, db)
-
-        verify(root_chain).on('Deposit')
-        verify(deposit_filter).watch(any)
 
     def test_apply_deposit(self, child_chain):
         DUMMY_AMOUNT = 123
@@ -79,11 +79,13 @@ class TestChildChain(UnstubMixin):
         block_number = child_chain.current_block_number
         block = child_chain.current_block
         when(child_chain.current_block).merklize_transaction_set().thenReturn(DUMMY_MERKLE)
-        when(root_chain).transact(any).thenReturn(MOCK_TRANSACT)
+        (when(root_chain.functions)
+            .submitBlock(DUMMY_MERKLE, block_number)
+            .thenReturn(MOCK_TRANSACT))
 
         child_chain.submit_block(self.DUMMY_SIG)
 
-        verify(MOCK_TRANSACT).submitBlock(DUMMY_MERKLE, block_number)
+        verify(MOCK_TRANSACT).transact(ANY)
         assert child_chain.current_block_number == block_number + 1
         assert child_chain.db.get_block(block_number) == block
         assert child_chain.current_block == Block()

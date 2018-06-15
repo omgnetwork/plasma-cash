@@ -1,6 +1,7 @@
 import rlp
+
 from ethereum import utils
-from web3 import Web3
+from web3.auto import w3
 
 from plasma_cash.child_chain.block import Block
 from plasma_cash.child_chain.transaction import Transaction
@@ -14,8 +15,10 @@ class Client(object):
         self.child_chain = child_chain
 
     def deposit(self, amount, depositor, currency):
-        value = Web3.toWei(amount, 'ether') if currency == '0x' + '00' * 20 else 0
-        self.root_chain.transact({'from': depositor, 'value': value}).deposit(currency, amount)
+        value = w3.toWei(amount, 'ether') if currency == '0x' + '00' * 20 else 0
+        self.root_chain.functions.deposit(currency, amount).transact(
+            {'from': w3.toChecksumAddress(depositor), 'value': value}
+        )
 
     def submit_block(self, key):
         key = utils.normalize_key(key)
@@ -59,9 +62,11 @@ class Client(object):
         block.merklize_transaction_set()
         tx_proof = block.merkle.create_merkle_proof(uid)
 
-        self.root_chain.transact({'from': exitor}).startExit(rlp.encode(prev_tx),
-                                                             prev_tx_proof,
-                                                             prev_tx_blk_num,
-                                                             rlp.encode(tx),
-                                                             tx_proof,
-                                                             tx_blk_num)
+        self.root_chain.functions.startExit(
+            rlp.encode(prev_tx),
+            prev_tx_proof,
+            prev_tx_blk_num,
+            rlp.encode(tx),
+            tx_proof,
+            tx_blk_num
+        ).transact({'from': w3.toChecksumAddress(exitor)})
