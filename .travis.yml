@@ -13,3 +13,6 @@ install:
 script:
   - pytest unit_tests
   - behave integration_tests/features/
+  - flake8 plasma_cash/
+  - flake8 unit_tests/
+  - flake8 integration_tests/
