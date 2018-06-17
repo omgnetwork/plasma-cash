@@ -1,5 +1,4 @@
 import rlp
-
 from ethereum import utils
 from web3.auto import w3
 
