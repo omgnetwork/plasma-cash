@@ -1,14 +1,15 @@
-import rlp
 import time
-
-from ethereum import utils
 from threading import Thread
+
+import rlp
+from ethereum import utils
 from web3.auto import w3
 
 from plasma_cash.utils.utils import get_sender
 
 from .block import Block
-from .exceptions import (InvalidBlockSignatureException,
+from .exceptions import (InvalidBlockNumException,
+                         InvalidBlockSignatureException,
                          InvalidTxSignatureException,
                          PreviousTxNotFoundException, TxAlreadySpentException,
                          TxAmountMismatchException)
@@ -26,7 +27,7 @@ class ChildChain(object):
 
         # Register a filter for deposit event
         deposit_filter = self.root_chain.eventFilter('Deposit', {'fromBlock': 0})
-        worker = Thread(target=self.log_loop, args=(deposit_filter, 1), daemon=True)
+        worker = Thread(target=self.log_loop, args=(deposit_filter, 0.1), daemon=True)
         worker.start()
 
     def log_loop(self, event_filter, poll_interval):
@@ -82,7 +83,14 @@ class ChildChain(object):
         return rlp.encode(self.current_block).hex()
 
     def get_block(self, blknum):
-        block = self.db.get_block(blknum)
+        if 0 < blknum < self.current_block_number:
+            block = self.db.get_block(blknum)
+        elif blknum == self.current_block_number:
+            return self.get_current_block()
+        else:
+            raise InvalidBlockNumException(
+                'current blockNum is {}, your requested blocknum does not exists'.format(
+                    self.current_block_number))
         return rlp.encode(block).hex()
 
     def get_proof(self, blknum, uid):

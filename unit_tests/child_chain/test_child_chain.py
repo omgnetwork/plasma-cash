@@ -1,12 +1,14 @@
+from threading import Thread
+
 import pytest
 import rlp
 from ethereum import utils as eth_utils
 from mockito import ANY, expect, mock, verify, when
-from threading import Thread
 
 from plasma_cash.child_chain.block import Block
 from plasma_cash.child_chain.child_chain import ChildChain
-from plasma_cash.child_chain.exceptions import (InvalidBlockSignatureException,
+from plasma_cash.child_chain.exceptions import (InvalidBlockNumException,
+                                                InvalidBlockSignatureException,
                                                 InvalidTxSignatureException,
                                                 PreviousTxNotFoundException,
                                                 TxAlreadySpentException,
@@ -164,6 +166,15 @@ class TestChildChain(UnstubMixin):
 
         expected = rlp.encode(child_chain.db.get_block(DUMMY_BLK_NUM)).hex()
         assert expected == child_chain.get_block(DUMMY_BLK_NUM)
+
+    def test_get_non_existing_block_would_fail(self, child_chain):
+        NON_EXISTING_BLOCK_NUM = 10000
+        with pytest.raises(InvalidBlockNumException):
+            child_chain.get_block(NON_EXISTING_BLOCK_NUM)
+
+    def test_get_block_with_less_than_1_would_fail(self, child_chain):
+        with pytest.raises(InvalidBlockNumException):
+            child_chain.get_block(0)
 
     def test_get_proof(self, child_chain):
         DUMMY_BLK_NUM = 1

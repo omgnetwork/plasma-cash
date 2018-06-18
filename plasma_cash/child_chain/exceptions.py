@@ -16,3 +16,7 @@ class TxAlreadySpentException(Exception):
 
 class TxAmountMismatchException(Exception):
     """tx input total amount is not equal to output total amount"""
+
+
+class InvalidBlockNumException(Exception):
+    """block num does not have related block"""
