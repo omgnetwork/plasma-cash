@@ -5,9 +5,6 @@ from web3.auto import w3
 
 from plasma_cash.dependency_config import container
 
-client = container.get_client()
-root_chain = container.get_root_chain()
-
 userA = '0xb83e232458A092696bE9717045d9A605FB0FEc2b'
 userB = '0x08d92dcA9038eA9433254996a2D4F08D43BE8227'
 userA_key = '0xe4807cf08191b310fe1821e6e5397727ee6bc694e92e25115eca40114e3a4e6b'
@@ -35,6 +32,7 @@ def userA_has_some_amount_of_eth_in_root_chain(context, amount):
 
 @when('userA deposit {amount:d} eth to plasma')
 def userA_deposit_some_eth_to_plasma(context, amount):
+    client = container.get_client()
     client.deposit(
         amount=amount,
         depositor=userA,
@@ -53,6 +51,7 @@ def userA_has_around_some_amount_of_eth_in_root_chain(context, amount):
 
 @then('userA has {amount:d} eth in the deposit tx in plasma cash')
 def userA_have_some_amount_of_eth_in_plasma_cash(context, amount):
+    client = container.get_client()
     block = client.get_block(DEPOSIT_TX_BLOCK)
     tx = block.get_tx_by_uid(uid)
     assert tx.amount == amount, 'tx.amount {} != amount: {}'.format(tx.amount, amount)
@@ -64,12 +63,14 @@ def userA_have_some_amount_of_eth_in_plasma_cash(context, amount):
 @when('userA transfer {amount:d} eth to userB in child chain')
 def userA_transfer_some_eth_to_userB_in_child_chain(context, amount):
     prev_block = DEPOSIT_TX_BLOCK
+    client = container.get_client()
     client.send_transaction(prev_block, uid, amount, userB, userA_key)
     client.submit_block(submit_block_sig)
 
 
 @then('userB has {amount:d} eth in the transfer tx in plasma cash')
 def then_userB_has_some_amount_of_eth_in_plasma_cash(context, amount):
+    client = container.get_client()
     block = client.get_block(TRANSFER_TX_BLOCK)
     tx = block.get_tx_by_uid(uid)
     assert tx.amount == amount, 'tx.amount {} != amount: {}'.format(tx.amount, amount)
@@ -80,6 +81,7 @@ def then_userB_has_some_amount_of_eth_in_plasma_cash(context, amount):
 
 @when('userB start exit {amount:d} eth from plasma cash')
 def userB_start_exit_some_eth_from_plasma_cash(context, amount):
+    client = container.get_client()
     client.start_exit(userB, uid, prev_tx_blk_num=1, tx_blk_num=2)
     time.sleep(5)
     client.submit_block(submit_block_sig)
@@ -87,4 +89,5 @@ def userB_start_exit_some_eth_from_plasma_cash(context, amount):
 
 @then('root chain got userB start exit {amount:d} eth event')
 def root_chain_got_userB_start_exit_event(context, amount):
+    root_chain = container.get_root_chain()
     assert root_chain.functions.exits(uid).call({'from': userA}) != 0
