@@ -40,9 +40,24 @@ Windows:
 
 Follow [this guide](https://solidity.readthedocs.io/en/v0.4.21/installing-solidity.html#prerequisites-windows).
 
-- [Python 3.2+](https://www.python.org/downloads/)
+- [ganache-cli 6.1.2+](https://github.com/trufflesuite/ganache-cli)
 
-It's also recommended to run [`ganache-cli`](https://github.com/trufflesuite/ganache-cli) when developing, testing, or playing around. This will allow you to receive near instant feedback.
+It's also recommended to run `ganache-cli` when developing, testing, or playing around. This will allow you to receive near instant feedback.
+
+Mac:
+```
+$ brew install node
+$ npm install -g ganache-cli
+```
+
+Linux:
+
+Install [Node.js](https://nodejs.org/en/download/). Then,
+```
+$ npm install -g ganache-cli
+```
+
+- [Python 3.2+](https://www.python.org/downloads/)
 
 ### Develop
 
