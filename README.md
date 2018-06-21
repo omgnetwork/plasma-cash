@@ -21,6 +21,44 @@ First, install [vcpkg](https://github.com/Microsoft/vcpkg). Then,
 > vcpkg install leveldb
 ```
 
+- [Solidity 0.4.18](https://github.com/ethereum/solidity/releases/tag/v0.4.18)
+
+Mac:
+```
+$ brew unlink solidity
+$ brew install https://raw.githubusercontent.com/ethereum/homebrew-ethereum/2aea171d7d6901b97d5f1f71bd07dd88ed5dfb42/solidity.rb
+```
+
+Linux:
+```
+$ wget https://github.com/ethereum/solidity/releases/download/v0.4.18/solc-static-linux
+$ chmod +x ./solc-static-linux
+$ sudo mv solc-static-linux /usr/bin/solc
+```
+
+Windows:
+
+Follow [this guide](https://solidity.readthedocs.io/en/v0.4.21/installing-solidity.html#prerequisites-windows).
+
+- [ganache-cli 6.1.2+](https://github.com/trufflesuite/ganache-cli)
+
+It's also recommended to run `ganache-cli` when developing, testing, or playing around. This will allow you to receive near instant feedback.
+
+Mac:
+```
+$ brew install node
+$ npm install -g ganache-cli
+```
+
+Linux:
+
+Install [Node.js](https://nodejs.org/en/download/). Then,
+```
+$ npm install -g ganache-cli
+```
+
+- [Python 3.2+](https://www.python.org/downloads/)
+
 ### Develop
 
 Install requirements:
