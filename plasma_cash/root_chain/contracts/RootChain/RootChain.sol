@@ -21,7 +21,23 @@ contract RootChain {
     uint public currentBlkNum;
     mapping(uint => bytes32) public childChain;
     mapping(bytes32 => uint) public wallet;
-    mapping(uint => uint) public exits;
+    mapping(uint => exit) public exits;
+    mapping(uint => challenge) public challenges;
+
+    struct exit {
+        bool hasValue;
+        uint exitTime;
+        uint exitTxBlkNum;
+        bytes exitTx;
+        uint txBeforeExitTxBlkNum;
+        bytes txBeforeExitTx;
+    }
+
+    struct challenge {
+        bool hasValue;
+        bytes challengeTx;
+        uint challengeTxBlkNum;
+    }
 
     /*
      * Modifiers
@@ -102,8 +118,67 @@ contract RootChain {
         require(prevMerkleHash.checkMembership(prevTxObj.uid, prevRoot, prevTxProof));
         require(merkleHash.checkMembership(txObj.uid, root, txProof));
 
-        // Record the exitable timestamp.
-        require(exits[txObj.uid] == 0);
-        exits[txObj.uid] = block.timestamp + 2 weeks;
+        // Record the exit tx.
+        require(!exits[txObj.uid].hasValue);
+        exits[txObj.uid] = exit({
+            hasValue: true,
+            exitTime: block.timestamp + 2 weeks,
+            exitTxBlkNum: txBlkNum,
+            exitTx: tx,
+            txBeforeExitTxBlkNum: prevTxBlkNum,
+            txBeforeExitTx: prevTx
+        });
+    }
+
+    function challengeExit(uint uid, bytes challengeTx, bytes proof, uint blkNum) public {
+        require(exits[uid].hasValue);
+
+        Transaction.Tx memory exitTxObj = (exits[uid].exitTx).createTx();
+        Transaction.Tx memory txBeforeExitTxObj = (exits[uid].txBeforeExitTx).createTx();
+        Transaction.Tx memory challengeTxObj = challengeTx.createTx();
+
+        require(exitTxObj.uid == challengeTxObj.uid);
+        require(exitTxObj.amount == challengeTxObj.amount);
+
+        bytes32 merkleHash = sha3(challengeTx);
+        bytes32 root = childChain[blkNum];
+        require(merkleHash.checkMembership(uid, root, proof));
+
+        if (exitTxObj.newOwner == challengeTxObj.signer) {
+            // Challenge tx spent the exit tx. Cancel it.
+            delete exits[uid].hasValue;
+        } else if (blkNum < exits[uid].exitTxBlkNum
+            && txBeforeExitTxObj.newOwner == challengeTxObj.signer) {
+            // Exit tx double spent the previous tx. Cancel it.
+            delete exits[uid].hasValue;
+        } else if (blkNum < exits[uid].txBeforeExitTxBlkNum) {
+            // Challenger provides a tx in history. Exitor needs to respond it.
+            // TODO: An exit could be challenged many times simultaneously.
+            challenges[uid] = challenge({
+                hasValue: true,
+                challengeTx: challengeTx,
+                challengeTxBlkNum: blkNum
+            });
+        }
+    }
+
+    function respondChallengeExit(uint uid, bytes respondTx, bytes proof, uint blkNum) public {
+        require(challenges[uid].hasValue);
+        require(exits[uid].hasValue);
+
+        Transaction.Tx memory challengeTxObj = (challenges[uid].challengeTx).createTx();
+        Transaction.Tx memory respondTxObj = respondTx.createTx();
+
+        require(challengeTxObj.uid == respondTxObj.uid);
+        require(challengeTxObj.amount == respondTxObj.amount);
+        require(challengeTxObj.newOwner == respondTxObj.signer);
+        require(blkNum <= exits[uid].txBeforeExitTxBlkNum);
+
+        bytes32 merkleHash = sha3(respondTx);
+        bytes32 root = childChain[blkNum];
+        require(merkleHash.checkMembership(uid, root, proof));
+
+        // Challenge has been responded. Cancel it.
+        delete challenges[uid].hasValue;
     }
 }

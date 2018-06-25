@@ -181,3 +181,69 @@ class TestClient(UnstubMixin):
         client.start_exit(DUMMY_EXITOR, DUMMY_UID, DUMMY_PREVIOUS_TX_BLK_NUM, DUMMY_TX_BLK_NUM)
 
         verify(MOCK_TRANSACT).transact({'from': DUMMY_EXITOR})
+
+    def test_challenge_exit(self, client, root_chain):
+        MOCK_BLOCK = mock()
+        MOCK_TRANSACT = mock()
+
+        DUMMY_CHALLENGER = 'dummy challenger'
+        DUMMY_UID = 'dummy uid'
+        DUMMY_TX = 'dummy tx'
+        DUMMY_TX_PROOF = 'dummy tx proof'
+        DUMMY_TX_BLK_NUM = 'dummy tx blk num'
+        DUMMY_ENCODED_TX = 'dummy encoded tx'
+
+        when(client).get_block(DUMMY_TX_BLK_NUM).thenReturn(MOCK_BLOCK)
+        when(MOCK_BLOCK).get_tx_by_uid(DUMMY_UID).thenReturn(DUMMY_TX)
+
+        MOCK_BLOCK.merkle = mock()
+        (when(MOCK_BLOCK.merkle)
+            .create_merkle_proof(DUMMY_UID)
+            .thenReturn(DUMMY_TX_PROOF))
+        (when('plasma_cash.client.client.rlp')
+            .encode(DUMMY_TX)
+            .thenReturn(DUMMY_ENCODED_TX))
+        when(w3).toChecksumAddress(DUMMY_CHALLENGER).thenReturn(DUMMY_CHALLENGER)
+        when(root_chain.functions).challengeExit(
+            DUMMY_UID,
+            DUMMY_ENCODED_TX,
+            DUMMY_TX_PROOF,
+            DUMMY_TX_BLK_NUM
+        ).thenReturn(MOCK_TRANSACT)
+
+        client.challenge_exit(DUMMY_CHALLENGER, DUMMY_UID, DUMMY_TX_BLK_NUM)
+
+        verify(MOCK_TRANSACT).transact({'from': DUMMY_CHALLENGER})
+
+    def test_respond_challenge_exit(self, client, root_chain):
+        MOCK_BLOCK = mock()
+        MOCK_TRANSACT = mock()
+
+        DUMMY_RESPONDER = 'dummy responder'
+        DUMMY_UID = 'dummy uid'
+        DUMMY_TX = 'dummy tx'
+        DUMMY_TX_PROOF = 'dummy tx proof'
+        DUMMY_TX_BLK_NUM = 'dummy tx blk num'
+        DUMMY_ENCODED_TX = 'dummy encoded tx'
+
+        when(client).get_block(DUMMY_TX_BLK_NUM).thenReturn(MOCK_BLOCK)
+        when(MOCK_BLOCK).get_tx_by_uid(DUMMY_UID).thenReturn(DUMMY_TX)
+
+        MOCK_BLOCK.merkle = mock()
+        (when(MOCK_BLOCK.merkle)
+            .create_merkle_proof(DUMMY_UID)
+            .thenReturn(DUMMY_TX_PROOF))
+        (when('plasma_cash.client.client.rlp')
+            .encode(DUMMY_TX)
+            .thenReturn(DUMMY_ENCODED_TX))
+        when(w3).toChecksumAddress(DUMMY_RESPONDER).thenReturn(DUMMY_RESPONDER)
+        when(root_chain.functions).respondChallengeExit(
+            DUMMY_UID,
+            DUMMY_ENCODED_TX,
+            DUMMY_TX_PROOF,
+            DUMMY_TX_BLK_NUM
+        ).thenReturn(MOCK_TRANSACT)
+
+        client.respond_challenge_exit(DUMMY_RESPONDER, DUMMY_UID, DUMMY_TX_BLK_NUM)
+
+        verify(MOCK_TRANSACT).transact({'from': DUMMY_RESPONDER})

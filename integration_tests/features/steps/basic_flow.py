@@ -90,4 +90,4 @@ def userB_start_exit_some_eth_from_plasma_cash(context, amount):
 @then('root chain got userB start exit {amount:d} eth event')
 def root_chain_got_userB_start_exit_event(context, amount):
     root_chain = container.get_root_chain()
-    assert root_chain.functions.exits(uid).call({'from': userA}) != 0
+    assert root_chain.functions.exits(uid).call({'from': userA}) != [False, 0, 0, b'', 0, b'']
