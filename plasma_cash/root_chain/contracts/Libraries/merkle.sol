@@ -3,7 +3,7 @@ pragma solidity ^0.4.18;
 library Merkle {
     /**
      * @dev Validate the merkle proof of a specifc leaf with index
-     * @param leaf The spedific leaf in merkle tree.
+     * @param leaf The specific leaf in merkle tree.
      * @param index The index of the leaf in the merkle tree.
      * @param rootHash The root of the merkle tree.
      * @param proof The proof of the leaf.
