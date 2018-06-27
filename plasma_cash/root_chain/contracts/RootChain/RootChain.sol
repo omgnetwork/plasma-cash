@@ -1,10 +1,12 @@
 pragma solidity ^0.4.18;
 
+import 'Challenge.sol';
 import 'merkle.sol';
 import 'Transaction.sol';
 
 
 contract RootChain {
+    using Challenge for Challenge.challenge[];
     using Merkle for bytes32;
     using Transaction for bytes;
 
@@ -22,7 +24,7 @@ contract RootChain {
     mapping(uint => bytes32) public childChain;
     mapping(bytes32 => uint) public wallet;
     mapping(uint => exit) public exits;
-    mapping(uint => challenge) public challenges;
+    mapping(uint => Challenge.challenge[]) public challenges;
 
     struct exit {
         bool hasValue;
@@ -31,12 +33,6 @@ contract RootChain {
         bytes exitTx;
         uint txBeforeExitTxBlkNum;
         bytes txBeforeExitTx;
-    }
-
-    struct challenge {
-        bool hasValue;
-        bytes challengeTx;
-        uint challengeTxBlkNum;
     }
 
     /*
@@ -87,10 +83,10 @@ contract RootChain {
 
     // @dev Starts to exit a transaction
     // @param prevTx The previous transaction in bytes of the transaction that user wants to exit
-    // @param prevTxProof The proof of the prevTx
+    // @param prevTxProof The merkle proof of the prevTx
     // @param prevTxBlkNum The block number of the prevTx
     // @param tx The transaction in bytes that user wants to exit
-    // @param txProof The proof of the tx
+    // @param txProof The merkle proof of the tx
     // @param txBlkNum The block number of the tx
     function startExit(
         bytes prevTx,
@@ -130,6 +126,11 @@ contract RootChain {
         });
     }
 
+    // @dev Challenge an exit transaction
+    // @param uid The id to specify the exit transaction
+    // @param challengeTx The transaction in bytes that user wants to challenge the exit
+    // @param proof The merkle proof of the challenge transaction
+    // @param blkNum The block number of the challenge transaction
     function challengeExit(uint uid, bytes challengeTx, bytes proof, uint blkNum) public {
         require(exits[uid].hasValue);
 
@@ -153,20 +154,35 @@ contract RootChain {
             delete exits[uid].hasValue;
         } else if (blkNum < exits[uid].txBeforeExitTxBlkNum) {
             // Challenger provides a tx in history. Exitor needs to respond it.
-            // TODO: An exit could be challenged many times simultaneously.
-            challenges[uid] = challenge({
-                hasValue: true,
-                challengeTx: challengeTx,
-                challengeTxBlkNum: blkNum
-            });
+            if (!challenges[uid].contains(challengeTx)) {
+                challenges[uid].push(Challenge.challenge({
+                    hasValue: true,
+                    challengeTx: challengeTx,
+                    challengeTxBlkNum: blkNum
+                }));
+            }
         }
     }
 
-    function respondChallengeExit(uint uid, bytes respondTx, bytes proof, uint blkNum) public {
-        require(challenges[uid].hasValue);
+    // @dev Respond to a challenge transaction
+    // @param uid The id to specify the challenge transaction
+    // @param challengeTx The transaction in bytes that user challenged before
+    // @param respondTx The transaction in bytes that user responds to the challenge transaction
+    // @param proof The merkle proof of the respond transaction
+    // @param blkNum The block number of the respond transaction
+    function respondChallengeExit(
+        uint uid,
+        bytes challengeTx,
+        bytes respondTx,
+        bytes proof,
+        uint blkNum
+    )
+        public
+    {
+        require(challenges[uid].contains(challengeTx));
         require(exits[uid].hasValue);
 
-        Transaction.Tx memory challengeTxObj = (challenges[uid].challengeTx).createTx();
+        Transaction.Tx memory challengeTxObj = challengeTx.createTx();
         Transaction.Tx memory respondTxObj = respondTx.createTx();
 
         require(challengeTxObj.uid == respondTxObj.uid);
@@ -179,6 +195,6 @@ contract RootChain {
         require(merkleHash.checkMembership(uid, root, proof));
 
         // Challenge has been responded. Cancel it.
-        delete challenges[uid].hasValue;
+        challenges[uid].remove(challengeTx);
     }
 }

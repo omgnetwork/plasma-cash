@@ -221,6 +221,7 @@ class TestClient(UnstubMixin):
 
         DUMMY_RESPONDER = 'dummy responder'
         DUMMY_UID = 'dummy uid'
+        DUMMY_CHALLENGE_TX = 'dummy challenge tx'
         DUMMY_TX = 'dummy tx'
         DUMMY_TX_PROOF = 'dummy tx proof'
         DUMMY_TX_BLK_NUM = 'dummy tx blk num'
@@ -239,11 +240,17 @@ class TestClient(UnstubMixin):
         when(w3).toChecksumAddress(DUMMY_RESPONDER).thenReturn(DUMMY_RESPONDER)
         when(root_chain.functions).respondChallengeExit(
             DUMMY_UID,
+            DUMMY_CHALLENGE_TX,
             DUMMY_ENCODED_TX,
             DUMMY_TX_PROOF,
             DUMMY_TX_BLK_NUM
         ).thenReturn(MOCK_TRANSACT)
 
-        client.respond_challenge_exit(DUMMY_RESPONDER, DUMMY_UID, DUMMY_TX_BLK_NUM)
+        client.respond_challenge_exit(
+            DUMMY_RESPONDER,
+            DUMMY_CHALLENGE_TX,
+            DUMMY_UID,
+            DUMMY_TX_BLK_NUM
+        )
 
         verify(MOCK_TRANSACT).transact({'from': DUMMY_RESPONDER})

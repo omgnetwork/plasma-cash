@@ -81,7 +81,7 @@ class Client(object):
             uid, rlp.encode(challenge_tx), tx_proof, tx_blk_num
         ).transact({'from': w3.toChecksumAddress(challenger)})
 
-    def respond_challenge_exit(self, responder, uid, tx_blk_num):
+    def respond_challenge_exit(self, responder, challenge_tx, uid, tx_blk_num):
         block = self.get_block(tx_blk_num)
 
         respond_tx = block.get_tx_by_uid(uid)
@@ -89,5 +89,5 @@ class Client(object):
         tx_proof = block.merkle.create_merkle_proof(uid)
 
         self.root_chain.functions.respondChallengeExit(
-            uid, rlp.encode(respond_tx), tx_proof, tx_blk_num
+            uid, challenge_tx, rlp.encode(respond_tx), tx_proof, tx_blk_num
         ).transact({'from': w3.toChecksumAddress(responder)})
