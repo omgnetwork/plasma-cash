@@ -1,5 +1,7 @@
 # plasma-cash
 
+Trivial change.
+
 ### Dependency Prerequisite
 
 - [LevelDB](https://github.com/google/leveldb)
