@@ -44,7 +44,7 @@ contract RootChain {
     }
 
 
-    function RootChain()
+    constructor ()
         public
     {
         authority = msg.sender;
@@ -78,7 +78,7 @@ contract RootChain {
         bytes32 uid = keccak256(currency, msg.sender, depositCount);
         wallet[uid] = amount;
         depositCount += 1;
-        Deposit(msg.sender, amount, uint256(uid));
+        emit Deposit(msg.sender, amount, uint256(uid));
     }
 
     // @dev Starts to exit a transaction
@@ -107,9 +107,9 @@ contract RootChain {
         require(prevTxObj.newOwner == txObj.signer);
         require(msg.sender == txObj.newOwner);
 
-        bytes32 prevMerkleHash = sha3(prevTx);
+        bytes32 prevMerkleHash = keccak256(prevTx);
         bytes32 prevRoot = childChain[prevTxBlkNum];
-        bytes32 merkleHash = sha3(tx);
+        bytes32 merkleHash = keccak256(tx);
         bytes32 root = childChain[txBlkNum];
         require(prevMerkleHash.checkMembership(prevTxObj.uid, prevRoot, prevTxProof));
         require(merkleHash.checkMembership(txObj.uid, root, txProof));
@@ -141,7 +141,7 @@ contract RootChain {
         require(exitTxObj.uid == challengeTxObj.uid);
         require(exitTxObj.amount == challengeTxObj.amount);
 
-        bytes32 merkleHash = sha3(challengeTx);
+        bytes32 merkleHash = keccak256(challengeTx);
         bytes32 root = childChain[blkNum];
         require(merkleHash.checkMembership(uid, root, proof));
 
@@ -190,7 +190,7 @@ contract RootChain {
         require(challengeTxObj.newOwner == respondTxObj.signer);
         require(blkNum <= exits[uid].txBeforeExitTxBlkNum);
 
-        bytes32 merkleHash = sha3(respondTx);
+        bytes32 merkleHash = keccak256(respondTx);
         bytes32 root = childChain[blkNum];
         require(merkleHash.checkMembership(uid, root, proof));
 
