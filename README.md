@@ -95,7 +95,7 @@ python
 >>> c.start_exit('0x08d92dca9038ea9433254996a2d4f08d43be8227', 1693390459388381052156419331572168595237271043726428428352746834777341368960, 1, 2)
 ```
 
-(Challenge double spending)
+(Challenge spent coin)
 ```
 python
 >>> from plasma_cash.dependency_config import container
