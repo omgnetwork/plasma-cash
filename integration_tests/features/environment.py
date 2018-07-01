@@ -1,7 +1,7 @@
 import os
 import signal
 import time
-from subprocess import Popen
+from subprocess import Popen, PIPE
 
 from plasma_cash.root_chain.deployer import Deployer
 
@@ -26,7 +26,7 @@ def after_scenario(context, step):
 
 
 def spin_up_root_chain():
-    return Popen(['ganache-cli', '-m=plasma_cash'], preexec_fn=os.setsid)
+    return Popen(['ganache-cli', '-m=plasma_cash'], preexec_fn=os.setsid, stdout=PIPE)
 
 
 def deploy_contracts():
