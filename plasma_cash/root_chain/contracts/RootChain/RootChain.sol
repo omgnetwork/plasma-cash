@@ -70,6 +70,7 @@ contract RootChain {
     function deposit(address currency, uint amount)
         payable
         public
+        returns (bytes32)
     {
         // TODO: handle the currency address if it's not zero
         if (currency == address(0)) {
@@ -79,6 +80,7 @@ contract RootChain {
         wallet[uid] = amount;
         depositCount += 1;
         emit Deposit(msg.sender, amount, uint256(uid));
+        return uid;
     }
 
     // @dev Starts to exit a transaction
@@ -196,5 +198,9 @@ contract RootChain {
 
         // Challenge has been responded. Cancel it.
         challenges[uid].remove(challengeTx);
+    }
+
+    function isChallengeExisted(uint uid, bytes challengeTx) public returns (bool) {
+        return challenges[uid].contains(challengeTx);
     }
 }

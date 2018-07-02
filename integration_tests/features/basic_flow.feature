@@ -8,4 +8,4 @@ Feature: Basic flow
     When userA transfer 1 eth to userB in child chain
     Then userB has 1 eth in the transfer tx in plasma cash
     When userB start exit 1 eth from plasma cash
-    Then root chain got userB start exit 1 eth event
+    Then root chain got userB start exit 1 eth

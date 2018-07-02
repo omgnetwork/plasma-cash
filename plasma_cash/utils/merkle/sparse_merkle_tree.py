@@ -5,7 +5,7 @@ from ethereum.utils import sha3
 
 class SparseMerkleTree(object):
 
-    def __init__(self, depth=256, leaves={}):
+    def __init__(self, depth=257, leaves={}):
         self.depth = depth
         if len(leaves) > 2**(depth-1):
             raise self.TreeSizeExceededException(

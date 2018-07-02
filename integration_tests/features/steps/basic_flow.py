@@ -3,6 +3,7 @@ import time
 from behave import given, then, when
 from web3.auto import w3
 
+from integration_tests.features.utils import address_equals, has_value
 from plasma_cash.dependency_config import container
 
 userA = '0xb83e232458A092696bE9717045d9A605FB0FEc2b'
@@ -14,10 +15,6 @@ uid = 16933904593883810521564193315721685952372710437264284283527468347773413689
 
 DEPOSIT_TX_BLOCK = 1  # only one block is generated after deposit
 TRANSFER_TX_BLOCK = 2
-
-
-def address_equals(address1, address2):
-    return w3.toChecksumAddress(address1) == w3.toChecksumAddress(address2)
 
 
 @given('userA has {amount:d} eth in root chain')
@@ -87,7 +84,7 @@ def userB_start_exit_some_eth_from_plasma_cash(context, amount):
     client.submit_block(submit_block_sig)
 
 
-@then('root chain got userB start exit {amount:d} eth event')
-def root_chain_got_userB_start_exit_event(context, amount):
+@then('root chain got userB start exit {amount:d} eth')
+def root_chain_got_userB_start_exit(context, amount):
     root_chain = container.get_root_chain()
-    assert root_chain.functions.exits(uid).call({'from': userA}) != [False, 0, 0, b'', 0, b'']
+    assert has_value(root_chain.functions.exits(uid).call({'from': userA}))
