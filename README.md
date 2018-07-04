@@ -80,7 +80,7 @@ python deployment.py
 
 Run child chain:
 ```
-FLASK_APP=plasma_cash/child_chain flask run --port=8546
+python -m plasma_cash.child_chain
 ```
 
 Client:

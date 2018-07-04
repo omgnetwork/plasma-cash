@@ -48,7 +48,10 @@ class DependencyContainer(object):
 
     def get_child_chain_client(self):
         if self._child_chain_client is None:
-            self._child_chain_client = ChildChainClient('http://localhost:8546')
+            self._child_chain_client = ChildChainClient(
+                'http://localhost:8546',
+                'ws://localhost:8546'
+            )
         return self._child_chain_client
 
     def get_client(self):

@@ -1,14 +1,33 @@
+import json
+import threading
+
 import requests
+import websocket
 
 from .exceptions import RequestFailedException
 
 
 class ChildChainClient(object):
 
-    def __init__(self, base_url, verify=False, timeout=5):
+    def __init__(self, base_url, ws_url, verify=False, timeout=5):
         self.base_url = base_url
         self.verify = verify
         self.timeout = timeout
+
+        self.ws = websocket.WebSocketApp(ws_url, on_message=self.ws_on_message)
+        self.ws_callback = {}
+        threading.Thread(target=self.ws.run_forever).start()
+
+    def ws_on_message(self, ws, message):
+        data = json.loads(message)
+        if callable(self.ws_callback[data['event']]):
+            self.ws_callback[data['event']](data['arg'])
+
+    def emit(self, event, arg):
+        self.ws.send(json.dumps({'event': event, 'arg': arg}))
+
+    def on(self, event, callback):
+        self.ws_callback[event] = callback
 
     def request(self, end_point, method, params=None, data=None, headers=None):
         url = self.base_url + end_point

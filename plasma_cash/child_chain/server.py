@@ -1,8 +1,14 @@
+import json
+
 from flask import Blueprint, request
+from geventwebsocket.exceptions import WebSocketError
 
 from plasma_cash.dependency_config import container
 
 bp = Blueprint('api', __name__)
+ws = Blueprint('ws', __name__)
+
+clients = {}
 
 
 @bp.route('/block', methods=['GET'])
@@ -32,3 +38,22 @@ def submit_block():
 def send_tx():
     tx = request.form['tx']
     return container.get_child_chain().apply_transaction(tx)
+
+
+@ws.route('/')
+def websocket(socket):
+    global clients
+    try:
+        while True:
+            data = json.loads(socket.receive())
+
+            if data['event'] == 'join':
+                clients[data['arg']] = socket
+            elif data['event'] == 'left':
+                del clients[data['arg']]
+            elif data['event'] == 'relay':
+                dest = clients[data['arg']['dest']]
+                msg = data['arg']['message']
+                dest.send(json.dumps({'event': 'relay', 'arg': msg}))
+    except (WebSocketError, TypeError) as e:
+        clients = {addr: sock for addr, sock in clients.items() if sock is not socket}
