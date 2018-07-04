@@ -8,17 +8,19 @@ from unit_tests.unstub_mixin import UnstubMixin
 
 class TestChildChainClient(UnstubMixin):
     BASE_URL = 'https://dummy-plasma-cash'
+    WS_URL = 'ws://dummy-plasma-cash'
 
     @pytest.fixture(scope='function')
     def client(self):
-        return ChildChainClient(self.BASE_URL)
+        return ChildChainClient(self.BASE_URL, self.WS_URL)
 
     def test_constructor(self):
         DUMMY_BASE_URL = 'base url'
+        DUMMY_WS_URL = 'ws url'
         DUMMY_VERIFY = True
         DUMMY_TIME_OUT = 100
 
-        c = ChildChainClient(DUMMY_BASE_URL, DUMMY_VERIFY, DUMMY_TIME_OUT)
+        c = ChildChainClient(DUMMY_BASE_URL, DUMMY_WS_URL, DUMMY_VERIFY, DUMMY_TIME_OUT)
         assert c.base_url == DUMMY_BASE_URL
         assert c.verify == DUMMY_VERIFY
         assert c.timeout == DUMMY_TIME_OUT
