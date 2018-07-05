@@ -33,7 +33,7 @@ $ brew install solidity
 
 Linux:
 ```
-$ wget https://github.com/ethereum/solidity/releases/download/v0.4.18/solc-static-linux
+$ wget https://github.com/ethereum/solidity/releases/download/v0.4.24/solc-static-linux
 $ chmod +x ./solc-static-linux
 $ sudo mv solc-static-linux /usr/bin/solc
 ```
