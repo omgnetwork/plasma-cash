@@ -34,8 +34,4 @@ def deploy_contracts():
 
 
 def spin_up_child_chain_server():
-    my_env = os.environ.copy()
-    my_env.update({
-        'FLASK_APP': 'plasma_cash/child_chain'
-    })
-    return Popen(['flask', 'run', '--port=8546'], env=my_env, preexec_fn=os.setsid)
+    return Popen(['python', '-m', 'plasma_cash.child_chain'], preexec_fn=os.setsid, stdout=PIPE)
