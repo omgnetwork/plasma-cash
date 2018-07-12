@@ -1,13 +1,11 @@
 import json
 
 from flask import Blueprint, request
-from geventwebsocket.exceptions import WebSocketError
 
+from plasma_cash.child_chain import websocket
 from plasma_cash.dependency_config import container
 
 bp = Blueprint('api', __name__)
-ws = Blueprint('ws', __name__)
-
 clients = {}
 
 
@@ -40,20 +38,26 @@ def send_tx():
     return container.get_child_chain().apply_transaction(tx)
 
 
-@ws.route('/')
-def websocket(socket):
-    global clients
-    try:
-        while True:
-            data = json.loads(socket.receive())
+@bp.route('/', methods=['GET'])
+def root():
+    if 'wsgi.websocket' in request.environ:
+        return websocket.listen(request)
+    else:
+        return ''
 
-            if data['event'] == 'join':
-                clients[data['arg']] = socket
-            elif data['event'] == 'left':
-                del clients[data['arg']]
-            elif data['event'] == 'relay':
-                dest = clients[data['arg']['dest']]
-                msg = data['arg']['message']
-                dest.send(json.dumps({'event': 'relay', 'arg': msg}))
-    except (WebSocketError, TypeError) as e:
-        clients = {addr: sock for addr, sock in clients.items() if sock is not socket}
+
+@websocket.on('join')
+def join(ws, arg):
+    clients[arg] = ws
+
+
+@websocket.on('left')
+def left(ws, arg):
+    del clients[arg]
+
+
+@websocket.on('relay')
+def relay(ws, arg):
+    dest = clients[arg['dest']]
+    msg = arg['message']
+    dest.send(json.dumps({'event': 'relay', 'arg': msg}))
