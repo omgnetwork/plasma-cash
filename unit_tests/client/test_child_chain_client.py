@@ -25,6 +25,34 @@ class TestChildChainClient(UnstubMixin):
         assert c.verify == DUMMY_VERIFY
         assert c.timeout == DUMMY_TIME_OUT
 
+    def test_ws_on_message(self, client):
+        DUMMY_WS = 'ws'
+        DUMMY_EVENT = 'event'
+        DUMMY_ARG = 'arg'
+        DUMMY_MESSAGE = '{"event": "event", "arg": "arg"}'
+
+        handler = mock()
+        when(handler).__call__(DUMMY_ARG).thenReturn(DUMMY_ARG)
+        client.ws_callback[DUMMY_EVENT] = handler
+        client.ws_on_message(DUMMY_WS, DUMMY_MESSAGE)
+        verify(handler).__call__(DUMMY_ARG)
+
+    def test_emit(self, client):
+        DUMMY_EVENT = 'event'
+        DUMMY_ARG = 'arg'
+        DUMMY_MESSAGE = '{"event": "event", "arg": "arg"}'
+
+        when(client.ws).send(any).thenReturn(None)
+        client.emit(DUMMY_EVENT, DUMMY_ARG)
+        verify(client.ws).send(DUMMY_MESSAGE)
+
+    def test_on(self, client):
+        DUMMY_EVENT = 'event'
+        DUMMY_HANDLER = 'handler'
+
+        client.on(DUMMY_EVENT, DUMMY_HANDLER)
+        assert client.ws_callback[DUMMY_EVENT] == DUMMY_HANDLER
+
     def test_request_success(self, client):
         DUMMY_END_POINT = '/end-point'
         DUMMY_METHOD = 'post'
