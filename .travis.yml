@@ -6,10 +6,14 @@ install:
   - chmod +x ./solc-static-linux
   - sudo mv solc-static-linux /usr/bin/solc
   - pip install -r requirements.txt
+  - pip install pytest-cov
+  - pip install codecov
   - npm install -g ganache-cli
 script:
-  - pytest unit_tests
+  - pytest --cov=plasma_cash --cov-branch unit_tests/
   - behave integration_tests/features/
   - flake8 plasma_cash/
   - flake8 unit_tests/
   - flake8 integration_tests/
+after_success:
+  - codecov

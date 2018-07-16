@@ -1,5 +1,7 @@
 # plasma-cash
 
+[![codecov](https://codecov.io/gh/omisego/plasma-cash/branch/master/graph/badge.svg)](https://codecov.io/gh/omisego/plasma-cash)
+
 ### Dependency Prerequisite
 
 - [LevelDB](https://github.com/google/leveldb)

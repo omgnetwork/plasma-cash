@@ -4,3 +4,4 @@ contract_data/
 *.pyc
 .pytest_cache/
 .db/
+.coverage
