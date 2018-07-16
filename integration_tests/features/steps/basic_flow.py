@@ -17,7 +17,7 @@ DEPOSIT_TX_BLOCK = 1  # only one block is generated after deposit
 TRANSFER_TX_BLOCK = 2
 
 
-@given('userA has {amount:d} eth in root chain')
+@given('userA and userB has {amount:d} eth in root chain')
 def userA_has_some_amount_of_eth_in_root_chain(context, amount):
     userA_balance = w3.eth.getBalance(userA)
     assert_msg = 'userA balance in {} does not match expected amount: {} in eth'.format(
@@ -25,6 +25,13 @@ def userA_has_some_amount_of_eth_in_root_chain(context, amount):
         amount
     )
     assert w3.toWei(amount, 'ether') == userA_balance, assert_msg
+
+    userB_balance = w3.eth.getBalance(userB)
+    assert_msg = 'userB balance in {} does not match expected amount: {} in eth'.format(
+        w3.fromWei(userB_balance, 'ether'),
+        amount
+    )
+    assert w3.toWei(amount, 'ether') == userB_balance, assert_msg
 
 
 @when('userA deposit {amount:d} eth to plasma')
@@ -66,7 +73,7 @@ def userA_transfer_some_eth_to_userB_in_child_chain(context, amount):
 
 
 @then('userB has {amount:d} eth in the transfer tx in plasma cash')
-def then_userB_has_some_amount_of_eth_in_plasma_cash(context, amount):
+def userB_has_some_amount_of_eth_in_plasma_cash(context, amount):
     client = container.get_client()
     block = client.get_block(TRANSFER_TX_BLOCK)
     tx = block.get_tx_by_uid(uid)
@@ -87,4 +94,25 @@ def userB_start_exit_some_eth_from_plasma_cash(context, amount):
 @then('root chain got userB start exit {amount:d} eth')
 def root_chain_got_userB_start_exit(context, amount):
     root_chain = container.get_root_chain()
-    assert has_value(root_chain.functions.exits(uid).call({'from': userA}))
+    assert has_value(root_chain.functions.exits(uid).call())
+
+
+@when('two weeks have passed')
+def two_week_passed(context):
+    TWO_WEEK_SECOND = 60 * 60 * 24 * 14
+    for provider in w3.providers:
+        provider.make_request('evm_increaseTime', TWO_WEEK_SECOND)
+
+
+@when('userB finalize the exit')
+def userB_finalize_exit(context):
+    client = container.get_client()
+    client.finalize_exit(uid, userB)
+    time.sleep(5)
+
+
+@then('userB has around {amount:d} eth in root chain after exit')
+def userB_successfully_exit_from_root_chain_after_exit(context, amount):
+    balance = w3.eth.getBalance(userB)
+    assert_msg = 'balance: {} is not in around: {}'.format(w3.fromWei(balance, 'ether'), amount)
+    assert w3.toWei(amount - 0.01, 'ether') <= balance <= w3.toWei(amount, 'ether'), assert_msg

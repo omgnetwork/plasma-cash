@@ -8,12 +8,12 @@ from unit_tests.unstub_mixin import UnstubMixin
 
 class TestRootChain(UnstubMixin):
 
-    @pytest.fixture(scope='function')
+    @pytest.fixture(scope='class')
     def tester_chain(self):
         tester.chain = tester.Chain()
         return tester
 
-    @pytest.fixture(scope='function')
+    @pytest.fixture(scope='class')
     def contract(self, tester_chain):
         deployer = Deployer()
         abi, bytecode, contract_name = deployer.compile_contract('RootChain/RootChain.sol')

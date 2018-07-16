@@ -91,3 +91,8 @@ class Client(object):
         self.root_chain.functions.respondChallengeExit(
             uid, challenge_tx, rlp.encode(respond_tx), tx_proof, tx_blk_num
         ).transact({'from': w3.toChecksumAddress(responder)})
+
+    def finalize_exit(self, uid, exitor):
+        (self.root_chain.functions
+            .finalizeExit(uid)
+            .transact({'from': w3.toChecksumAddress(exitor)}))
