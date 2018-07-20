@@ -22,7 +22,7 @@ contract RootChain {
     uint public depositCount;
     uint public currentBlkNum;
     mapping(uint => bytes32) public childChain;
-    mapping(bytes32 => uint) public wallet;
+    mapping(uint => uint) public wallet;
     mapping(uint => exit) public exits;
     mapping(uint => Challenge.challenge[]) public challenges;
 
@@ -33,6 +33,7 @@ contract RootChain {
         bytes exitTx;
         uint txBeforeExitTxBlkNum;
         bytes txBeforeExitTx;
+        address owner;
     }
 
     /*
@@ -70,16 +71,16 @@ contract RootChain {
     function deposit(address currency, uint amount)
         payable
         public
-        returns (bytes32)
+        returns (uint)
     {
         // TODO: handle the currency address if it's not zero
         if (currency == address(0)) {
             require(amount * 10**18 == msg.value);
         }
-        bytes32 uid = keccak256(currency, msg.sender, depositCount);
+        uint uid = uint256(keccak256(currency, msg.sender, depositCount));
         wallet[uid] = amount;
         depositCount += 1;
-        emit Deposit(msg.sender, amount, uint256(uid));
+        emit Deposit(msg.sender, amount, uid);
         return uid;
     }
 
@@ -124,7 +125,8 @@ contract RootChain {
             exitTxBlkNum: txBlkNum,
             exitTx: tx,
             txBeforeExitTxBlkNum: prevTxBlkNum,
-            txBeforeExitTx: prevTx
+            txBeforeExitTx: prevTx,
+            owner: msg.sender
         });
     }
 
@@ -198,6 +200,19 @@ contract RootChain {
 
         // Challenge has been responded. Cancel it.
         challenges[uid].remove(challengeTx);
+    }
+
+    // @dev Finalize an exit
+    // @param uid The id to specify the exit transaction
+    function finalizeExit(uint uid) public {
+        require(exits[uid].hasValue);
+        require(now >= exits[uid].exitTime);
+        for (uint i = 0; i < challenges[uid].length; i++) {
+            require(!challenges[uid][i].hasValue);
+        }
+
+        exits[uid].owner.transfer(wallet[uid]*10**18);
+        delete exits[uid].hasValue;
     }
 
     function isChallengeExisted(uint uid, bytes challengeTx) public returns (bool) {

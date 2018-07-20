@@ -254,3 +254,12 @@ class TestClient(UnstubMixin):
         )
 
         verify(MOCK_TRANSACT).transact({'from': DUMMY_RESPONDER})
+
+    def test_finalize_exit(self, client, root_chain):
+        DUMMY_UID = 'dummy uid'
+        DUMMY_EXITOR = '0x08d92dcA9038eA9433254996a2D4F08D43BE8227'
+        MOCK_TRANSACT = mock()
+
+        when(root_chain.functions).finalizeExit(DUMMY_UID).thenReturn(MOCK_TRANSACT)
+        client.finalize_exit(DUMMY_UID, DUMMY_EXITOR)
+        verify(MOCK_TRANSACT).transact({'from': DUMMY_EXITOR})
