@@ -12,7 +12,8 @@ from plasma_cash.child_chain.exceptions import (InvalidBlockNumException,
                                                 InvalidTxSignatureException,
                                                 PreviousTxNotFoundException,
                                                 TxAlreadySpentException,
-                                                TxAmountMismatchException)
+                                                TxAmountMismatchException,
+                                                TxWithSameUidAlreadyExists)
 from plasma_cash.child_chain.transaction import Transaction
 from plasma_cash.utils.db.memory_db import MemoryDb
 from unit_tests.unstub_mixin import UnstubMixin
@@ -116,7 +117,7 @@ class TestChildChain(UnstubMixin):
         assert prev_tx.amount == tx.amount
         assert prev_tx.spent is True
 
-    def test_apply_transaction_with_previous_tx_not_exist(self, child_chain):
+    def test_apply_transaction_with_previous_tx_not_exist_should_fail(self, child_chain):
         DUMMY_TX_KEY = b'8b76243a95f959bf101248474e6bdacdedc8ad995d287c24616a41bd51642965'
 
         # token with uid 3 doesn't exist
@@ -126,7 +127,7 @@ class TestChildChain(UnstubMixin):
         with pytest.raises(PreviousTxNotFoundException):
             child_chain.apply_transaction(rlp.encode(tx).hex())
 
-    def test_apply_transaction_with_double_spending(self, child_chain):
+    def test_apply_transaction_with_double_spending_should_fail(self, child_chain):
         DUMMY_TX_KEY = b'8b76243a95f959bf101248474e6bdacdedc8ad995d287c24616a41bd51642965'
 
         tx = Transaction(prev_block=1, uid=1, amount=10, new_owner=self.DUMMY_TX_NEW_OWNER)
@@ -138,7 +139,7 @@ class TestChildChain(UnstubMixin):
         with pytest.raises(TxAlreadySpentException):
             child_chain.apply_transaction(rlp.encode(tx).hex())
 
-    def test_apply_transaction_with_mismatch_amount(self, child_chain):
+    def test_apply_transaction_with_mismatch_amount_should_fail(self, child_chain):
         DUMMY_TX_KEY = b'8b76243a95f959bf101248474e6bdacdedc8ad995d287c24616a41bd51642965'
 
         # token with uid 1 doesn't have 20
@@ -148,13 +149,34 @@ class TestChildChain(UnstubMixin):
         with pytest.raises(TxAmountMismatchException):
             child_chain.apply_transaction(rlp.encode(tx).hex())
 
-    def test_apply_transaction_with_invalid_sig(self, child_chain):
+    def test_apply_transaction_with_invalid_sig_should_fail(self, child_chain):
         DUMMY_INVALID_TX_KEY = b'7a76243a95f959bf101248474e6bdacdedc8ad995d287c24616a41bd51642965'
 
         tx = Transaction(prev_block=1, uid=1, amount=10, new_owner=self.DUMMY_TX_NEW_OWNER)
         tx.sign(eth_utils.normalize_key(DUMMY_INVALID_TX_KEY))
 
         with pytest.raises(InvalidTxSignatureException):
+            child_chain.apply_transaction(rlp.encode(tx).hex())
+
+    def test_apply_transaction_with_same_uid_tx_already_in_block_should_fail(self, child_chain):
+        # create a another (invalid) transaction with same uid in block 2
+        # this transaction would be used as the prev_tx of second same uid tx
+        DUMMY_TX_OWNER = b'\x8cT\xa4\xa0\x17\x9f$\x80\x1fI\xf92-\xab<\x87\xeb\x19L\x9b'
+        tx = Transaction(prev_block=0, uid=1, amount=10, new_owner=DUMMY_TX_OWNER)
+        child_chain.db.save_block(Block([tx]), 2)
+        child_chain.current_block_number = 3
+        child_chain.db.increment_current_block_num()
+
+        # first apply a tx with the uid
+        DUMMY_TX_KEY = b'8b76243a95f959bf101248474e6bdacdedc8ad995d287c24616a41bd51642965'
+        tx = Transaction(prev_block=1, uid=1, amount=10, new_owner=self.DUMMY_TX_NEW_OWNER)
+        tx.sign(eth_utils.normalize_key(DUMMY_TX_KEY))
+        child_chain.apply_transaction(rlp.encode(tx).hex())
+
+        # apply another tx with the same uid should fail
+        tx = Transaction(prev_block=2, uid=1, amount=10, new_owner=self.DUMMY_TX_NEW_OWNER)
+        tx.sign(eth_utils.normalize_key(DUMMY_TX_KEY))
+        with pytest.raises(TxWithSameUidAlreadyExists):
             child_chain.apply_transaction(rlp.encode(tx).hex())
 
     def test_get_current_block(self, child_chain):

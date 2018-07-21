@@ -20,3 +20,7 @@ class TxAmountMismatchException(Exception):
 
 class InvalidBlockNumException(Exception):
     """block num does not have related block"""
+
+
+class TxWithSameUidAlreadyExists(Exception):
+    """the block already has one tx with the uid"""

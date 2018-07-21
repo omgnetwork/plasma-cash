@@ -13,7 +13,7 @@ from .exceptions import (InvalidBlockNumException,
                          InvalidBlockSignatureException,
                          InvalidTxSignatureException,
                          PreviousTxNotFoundException, TxAlreadySpentException,
-                         TxAmountMismatchException)
+                         TxAmountMismatchException, TxWithSameUidAlreadyExists)
 from .transaction import Transaction
 
 
@@ -76,6 +76,8 @@ class ChildChain(object):
             raise TxAmountMismatchException('failed to apply transaction')
         if tx.sig == b'\x00' * 65 or tx.sender != prev_tx.new_owner:
             raise InvalidTxSignatureException('failed to apply transaction')
+        if self.current_block.get_tx_by_uid(tx.uid):
+            raise TxWithSameUidAlreadyExists('failed to apply transaction')
 
         prev_tx.spent = True  # Mark the previous tx as spent
         self.current_block.add_tx(tx)
