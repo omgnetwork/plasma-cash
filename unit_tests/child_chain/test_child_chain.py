@@ -167,6 +167,11 @@ class TestChildChain(UnstubMixin):
         expected = rlp.encode(child_chain.db.get_block(DUMMY_BLK_NUM)).hex()
         assert expected == child_chain.get_block(DUMMY_BLK_NUM)
 
+    def test_get_block_with_current_block_number(self, child_chain):
+        current_block_number = child_chain.current_block_number
+        expected = rlp.encode(child_chain.current_block).hex()
+        assert expected == child_chain.get_block(current_block_number)
+
     def test_get_non_existing_block_would_fail(self, child_chain):
         NON_EXISTING_BLOCK_NUM = 10000
         with pytest.raises(InvalidBlockNumException):
