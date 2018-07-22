@@ -40,10 +40,16 @@ def send_tx():
 
 @bp.route('/', methods=['GET'])
 def root():
+    global clients
+
     if 'wsgi.websocket' in request.environ:
-        return websocket.listen(request)
-    else:
-        return ''
+        ws = websocket.listen(request)
+
+        # Handle WebSocket disconnection, remove socket from client list
+        clients = {k: v for k, v in clients.items() if v is not ws}
+
+    # Path / is not an API entry
+    return ''
 
 
 @websocket.on('join')

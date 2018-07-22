@@ -24,4 +24,4 @@ def listen(request):
         # Ignore disconnection
         pass
 
-    return ''
+    return ws
