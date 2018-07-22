@@ -1,13 +1,6 @@
 import json
 
-callback = {}
-
-
-def on(event):
-    def decorator(func):
-        callback[event] = func
-        return func
-    return decorator
+from .event import emit
 
 
 def listen(request):
@@ -16,10 +9,10 @@ def listen(request):
     try:
         while True:
             data = json.loads(ws.receive())
-            if 'event' not in data or 'arg' not in data or data['event'] not in callback:
+            if 'event' not in data or 'arg' not in data:
                 # Invalid WebSocket request
                 continue
-            callback[data['event']](ws, data['arg'])
+            emit('websocket.' + data['event'], ws, data['arg'])
     except TypeError:
         # Ignore disconnection
         pass

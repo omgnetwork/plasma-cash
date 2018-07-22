@@ -7,7 +7,7 @@ from web3.auto import w3
 
 from plasma_cash.utils.utils import get_sender
 
-from . import emit
+from .event import emit
 from .block import Block
 from .exceptions import (InvalidBlockNumException,
                          InvalidBlockSignatureException,
@@ -57,7 +57,7 @@ class ChildChain(object):
             {'from': authority_address}
         )
 
-        emit('block', self.current_block_number)
+        emit('chain.block', self.current_block_number)
         self.db.save_block(self.current_block, self.current_block_number)
         self.current_block_number = self.db.increment_current_block_num()
         self.current_block = Block()

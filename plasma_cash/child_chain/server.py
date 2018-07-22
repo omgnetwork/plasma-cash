@@ -2,7 +2,7 @@ import json
 
 from flask import Blueprint, request
 
-from plasma_cash.child_chain import websocket, on
+from plasma_cash.child_chain import websocket, event
 from plasma_cash.dependency_config import container
 
 bp = Blueprint('api', __name__)
@@ -52,24 +52,24 @@ def root():
     return ''
 
 
-@websocket.on('join')
+@event.on('websocket.join')
 def join(ws, arg):
     clients[arg] = ws
 
 
-@websocket.on('left')
+@event.on('websocket.left')
 def left(ws, arg):
     del clients[arg]
 
 
-@websocket.on('relay')
+@event.on('websocket.relay')
 def relay(ws, arg):
     dest = clients[arg['dest']]
     msg = arg['message']
     dest.send(json.dumps({'event': 'relay', 'arg': msg}))
 
 
-@on('block')
+@event.on('chain.block')
 def on_block(block_number):
     for ws in clients.values():
         ws.send(json.dumps({'event': 'block', 'arg': block_number}))
