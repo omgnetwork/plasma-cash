@@ -61,7 +61,7 @@ Install [Node.js](https://nodejs.org/en/download/). Then,
 $ npm install -g ganache-cli
 ```
 
-- [Python 3.2+](https://www.python.org/downloads/)
+- [Python 3.5+](https://www.python.org/downloads/)
 
 ### Develop
 
