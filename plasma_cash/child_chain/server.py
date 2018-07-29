@@ -66,10 +66,10 @@ def left(ws, arg):
 def relay(ws, arg):
     dest = clients[arg['dest']]
     msg = arg['message']
-    dest.send(json.dumps({'event': 'relay', 'arg': msg}))
+    dest.send(json.dumps({'event': 'relay', 'arg': msg}, sort_keys=True))
 
 
 @event.on('chain.block')
 def on_block(block_number):
     for ws in clients.values():
-        ws.send(json.dumps({'event': 'block', 'arg': block_number}))
+        ws.send(json.dumps({'event': 'block', 'arg': block_number}, sort_keys=True))

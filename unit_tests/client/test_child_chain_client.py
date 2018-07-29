@@ -29,7 +29,7 @@ class TestChildChainClient(UnstubMixin):
         DUMMY_WS = 'ws'
         DUMMY_EVENT = 'event'
         DUMMY_ARG = 'arg'
-        DUMMY_MESSAGE = '{"event": "event", "arg": "arg"}'
+        DUMMY_MESSAGE = '{"arg": "arg", "event": "event"}'
 
         handler = mock()
         when(handler).__call__(DUMMY_ARG).thenReturn(DUMMY_ARG)
@@ -40,7 +40,7 @@ class TestChildChainClient(UnstubMixin):
     def test_emit(self, client):
         DUMMY_EVENT = 'event'
         DUMMY_ARG = 'arg'
-        DUMMY_MESSAGE = '{"event": "event", "arg": "arg"}'
+        DUMMY_MESSAGE = '{"arg": "arg", "event": "event"}'
 
         when(client.ws).send(any).thenReturn(None)
         client.emit(DUMMY_EVENT, DUMMY_ARG)
