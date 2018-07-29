@@ -24,7 +24,7 @@ class ChildChainClient(object):
             self.ws_callback[data['event']](data['arg'])
 
     def emit(self, event, arg):
-        self.ws.send(json.dumps({'event': event, 'arg': arg}))
+        self.ws.send(json.dumps({'event': event, 'arg': arg}, sort_keys=True))
 
     def on(self, event, callback):
         self.ws_callback[event] = callback
