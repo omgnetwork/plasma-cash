@@ -9,27 +9,31 @@ from plasma_cash.utils.utils import sign
 
 class Client(object):
 
-    def __init__(self, root_chain, child_chain):
+    def __init__(self, root_chain, child_chain, key):
         self.root_chain = root_chain
         self.child_chain = child_chain
+        self.key = utils.normalize_key(key)
 
-    def deposit(self, amount, depositor, currency):
+    @property
+    def address(self):
+        return w3.toChecksumAddress(utils.privtoaddr(self.key))
+
+    def deposit(self, amount, currency):
         value = w3.toWei(amount, 'ether') if currency == '0x' + '00' * 20 else 0
         self.root_chain.functions.deposit(currency, amount).transact(
-            {'from': w3.toChecksumAddress(depositor), 'value': value}
+            {'from': self.address, 'value': value}
         )
 
-    def submit_block(self, key):
-        key = utils.normalize_key(key)
+    def submit_block(self):
+        # TODO: this method should be a cron job in child chain
         block = self.get_current_block()
-        sig = sign(block.hash, key)
+        sig = sign(block.hash, self.key)
         self.child_chain.submit_block(sig.hex())
 
-    def send_transaction(self, prev_block, uid, amount, new_owner, key):
+    def send_transaction(self, prev_block, uid, amount, new_owner):
         new_owner = utils.normalize_address(new_owner)
-        key = utils.normalize_key(key)
         tx = Transaction(prev_block, uid, amount, new_owner)
-        tx.sign(key)
+        tx.sign(self.key)
         self.child_chain.send_transaction(rlp.encode(tx, Transaction).hex())
 
     def get_current_block(self):
@@ -43,7 +47,7 @@ class Client(object):
     def get_proof(self, blknum, uid):
         return self.child_chain.get_proof(blknum, uid)
 
-    def start_exit(self, exitor, uid, prev_tx_blk_num, tx_blk_num):
+    def start_exit(self, uid, prev_tx_blk_num, tx_blk_num):
         # TODO: Getting the whole block doesn't meet the design concept of plasma cash.
         #       Transactions and its proofs should be passed from previous owner and child chain
         #       before. When exiting, client should have enough information and only query from its
@@ -68,9 +72,9 @@ class Client(object):
             rlp.encode(tx),
             tx_proof,
             tx_blk_num
-        ).transact({'from': w3.toChecksumAddress(exitor)})
+        ).transact({'from': self.address})
 
-    def challenge_exit(self, challenger, uid, tx_blk_num):
+    def challenge_exit(self, uid, tx_blk_num):
         block = self.get_block(tx_blk_num)
 
         challenge_tx = block.get_tx_by_uid(uid)
@@ -79,9 +83,9 @@ class Client(object):
 
         self.root_chain.functions.challengeExit(
             uid, rlp.encode(challenge_tx), tx_proof, tx_blk_num
-        ).transact({'from': w3.toChecksumAddress(challenger)})
+        ).transact({'from': self.address})
 
-    def respond_challenge_exit(self, responder, challenge_tx, uid, tx_blk_num):
+    def respond_challenge_exit(self, challenge_tx, uid, tx_blk_num):
         block = self.get_block(tx_blk_num)
 
         respond_tx = block.get_tx_by_uid(uid)
@@ -90,9 +94,7 @@ class Client(object):
 
         self.root_chain.functions.respondChallengeExit(
             uid, challenge_tx, rlp.encode(respond_tx), tx_proof, tx_blk_num
-        ).transact({'from': w3.toChecksumAddress(responder)})
+        ).transact({'from': self.address})
 
-    def finalize_exit(self, uid, exitor):
-        (self.root_chain.functions
-            .finalizeExit(uid)
-            .transact({'from': w3.toChecksumAddress(exitor)}))
+    def finalize_exit(self, uid):
+        self.root_chain.functions.finalizeExit(uid).transact({'from': self.address})
