@@ -6,6 +6,7 @@ from ethereum import utils
 
 from integration_tests.features.utils import has_value
 from plasma_cash.child_chain.transaction import Transaction
+from plasma_cash.client.client import Client
 from plasma_cash.dependency_config import container
 from plasma_cash.utils.merkle.sparse_merkle_tree import SparseMerkleTree
 
@@ -15,6 +16,7 @@ userB = '0x08d92dcA9038eA9433254996a2D4F08D43BE8227'
 userC = '0xDF29cFbD5d793Fa5B22D5c730A8E8450740C6f8f'
 operator_key = '0xa18969817c2cefadf52b93eb20f917dce760ce13b2ac9025e0361ad1e7a1d448'
 userA_key = '0xe4807cf08191b310fe1821e6e5397727ee6bc694e92e25115eca40114e3a4e6b'
+userC_key = '0x8af3051eb765261b245d586a88700e606431b199f2cce4c825d2b1921086b35c'
 eth_currency = '0x0000000000000000000000000000000000000000'
 uid = 1693390459388381052156419331572168595237271043726428428352746834777341368960
 
@@ -25,22 +27,22 @@ TRANSFER_TX_2_BLOCK = 3
 
 @given('userA deposits {amount:d} eth in plasma cash')
 def userA_deposits_some_amount_of_eth_in_plasma_cash(context, amount):
-    client = container.get_client()
-    client.deposit(
-        amount=amount,
-        depositor=userA,
-        currency=eth_currency
-    )
+    client = Client(container.get_root_chain(), container.get_child_chain_client(), userA_key)
+    client.deposit(amount=amount, currency=eth_currency)
     time.sleep(5)
-    client.submit_block(operator_key)
+
+    operator = Client(container.get_root_chain(), container.get_child_chain_client(), operator_key)
+    operator.submit_block()
 
 
 @given('userA transfers {amount:d} eth to userB')
 def userA_transfers_some_eth_to_userB(context, amount):
     prev_block = DEPOSIT_TX_BLOCK
-    client = container.get_client()
-    client.send_transaction(prev_block, uid, amount, userB, userA_key)
-    client.submit_block(operator_key)
+    client = Client(container.get_root_chain(), container.get_child_chain_client(), userA_key)
+    client.send_transaction(prev_block, uid, amount, userB)
+
+    operator = Client(container.get_root_chain(), container.get_child_chain_client(), operator_key)
+    operator.submit_block()
 
 
 @given('userA tries to double spend {amount:d} eth to userC')
@@ -57,7 +59,7 @@ def userA_tries_to_double_spend_some_eth_to_userC(context, amount):
 
 @when('userC starts to exit {amount:d} eth from plasma cash')
 def userC_starts_to_exit_some_eth_from_plasma_cash(context, amount):
-    client = container.get_client()
+    client = Client(container.get_root_chain(), container.get_child_chain_client(), userC_key)
 
     deposit_block = client.get_block(DEPOSIT_TX_BLOCK)
     deposit_tx = deposit_block.get_tx_by_uid(uid)
@@ -90,8 +92,8 @@ def root_chain_got_the_start_exit_record_from_double_spending_challenge(context)
 
 @when('userB challenges the exit')
 def userC_challenges_the_exit(context):
-    client = container.get_client()
-    client.challenge_exit(userC, uid, tx_blk_num=TRANSFER_TX_1_BLOCK)
+    client = Client(container.get_root_chain(), container.get_child_chain_client(), userC_key)
+    client.challenge_exit(uid, tx_blk_num=TRANSFER_TX_1_BLOCK)
     time.sleep(5)
 
 

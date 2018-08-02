@@ -1,6 +1,5 @@
 import pytest
 from mockito import ANY, mock, verify, when
-from web3.auto import w3
 
 from plasma_cash.child_chain.block import Block
 from plasma_cash.client.client import Client
@@ -21,27 +20,36 @@ class TestClient(UnstubMixin):
 
     @pytest.fixture(scope='function')
     def client(self, root_chain, child_chain):
-        return Client(root_chain, child_chain)
+        DUMMY_KEY = '0xa18969817c2cefadf52b93eb20f917dce760ce13b2ac9025e0361ad1e7a1d448'
+        return Client(root_chain, child_chain, DUMMY_KEY)
 
     def test_constructor(self):
         DUMMY_ROOT_CHAIN = 'root chain'
         DUMMY_CHILD_CHAIN = 'child chain'
-        c = Client(DUMMY_ROOT_CHAIN, DUMMY_CHILD_CHAIN)
+        DUMMY_KEY = 'key'
+
+        when('plasma_cash.client.client.utils').normalize_key(DUMMY_KEY).thenReturn(DUMMY_KEY)
+        c = Client(DUMMY_ROOT_CHAIN, DUMMY_CHILD_CHAIN, DUMMY_KEY)
+
         assert c.root_chain == DUMMY_ROOT_CHAIN
         assert c.child_chain == DUMMY_CHILD_CHAIN
+        assert c.key == DUMMY_KEY
+
+    def test_address(self, client):
+        DUMMY_ADDRESS = '0x3B0884f4E50e9BC2CE9b224aB72feA89a81CDF7c'
+
+        assert client.address == DUMMY_ADDRESS
 
     def test_deposit(self, client, root_chain):
         MOCK_TRANSACT = mock()
         DUMMY_AMOUNT = 1
-        DUMMY_DEPOSITOR = 'dummy depositor'
-        DUMMY_CURRENCY = 'dummy currency'
+        DUMMY_CURRENCY = '0x0000000000000000000000000000000000000000'
 
-        when(w3).toChecksumAddress(DUMMY_DEPOSITOR).thenReturn(DUMMY_DEPOSITOR)
         when(root_chain.functions).deposit(DUMMY_CURRENCY, DUMMY_AMOUNT).thenReturn(MOCK_TRANSACT)
 
-        client.deposit(DUMMY_AMOUNT, DUMMY_DEPOSITOR, DUMMY_CURRENCY)
+        client.deposit(DUMMY_AMOUNT, DUMMY_CURRENCY)
 
-        verify(MOCK_TRANSACT).transact(ANY)
+        verify(MOCK_TRANSACT).transact({'from': client.address, 'value': DUMMY_AMOUNT * 10**18})
 
     def test_submit_block(self, client, child_chain):
         MOCK_HASH = 'mock hash'
@@ -49,13 +57,10 @@ class TestClient(UnstubMixin):
         MOCK_HEX = 'mock hex'
         MOCK_SIG = mock({'hex': lambda: MOCK_HEX})
 
-        KEY = 'key to sign'
-
         when(client).get_current_block().thenReturn(MOCK_BLOCK)
-        when('plasma_cash.client.client.utils').normalize_key(KEY).thenReturn(KEY)
-        when('plasma_cash.client.client').sign(MOCK_HASH, KEY).thenReturn(MOCK_SIG)
+        when('plasma_cash.client.client').sign(MOCK_HASH, client.key).thenReturn(MOCK_SIG)
 
-        client.submit_block(KEY)
+        client.submit_block()
 
         verify(child_chain).submit_block(MOCK_HEX)
 
@@ -65,16 +70,12 @@ class TestClient(UnstubMixin):
         DUMMY_AMOUNT = 123
         DUMMY_NEW_OWNER = 'new owner'
         DUMMY_NEW_OWNER_ADDR = 'new owner address'
-        DUMMY_KEY = 'key'
-        DUMMY_NORMALIZED_KEY = 'normalized key'
         MOCK_TX = mock()
         DUMMY_TX_HEX = 'dummy tx hex'
         MOCK_ENCODED_TX = mock({'hex': lambda: DUMMY_TX_HEX})
 
         (when('plasma_cash.client.client.utils')
             .normalize_address(DUMMY_NEW_OWNER).thenReturn(DUMMY_NEW_OWNER_ADDR))
-        (when('plasma_cash.client.client.utils')
-            .normalize_key(DUMMY_KEY).thenReturn(DUMMY_NORMALIZED_KEY))
         (when('plasma_cash.client.client').Transaction(
             DUMMY_PREV_BLOCK, DUMMY_UID, DUMMY_AMOUNT, DUMMY_NEW_OWNER_ADDR
             ).thenReturn(MOCK_TX))
@@ -88,10 +89,9 @@ class TestClient(UnstubMixin):
             DUMMY_PREV_BLOCK,
             DUMMY_UID,
             DUMMY_AMOUNT,
-            DUMMY_NEW_OWNER,
-            DUMMY_KEY
+            DUMMY_NEW_OWNER
         )
-        verify(MOCK_TX).sign(DUMMY_NORMALIZED_KEY)
+        verify(MOCK_TX).sign(client.key)
         verify(child_chain).send_transaction(DUMMY_TX_HEX)
 
     def test_get_current_block(self, child_chain, client):
@@ -138,7 +138,6 @@ class TestClient(UnstubMixin):
         MOCK_PREVIOUS_BLOCK = mock()
         MOCK_BLOCK = mock()
 
-        DUMMY_EXITOR = 'dummy exitor'
         DUMMY_PREVIOUS_TX = 'dummy previous tx'
         DUMMY_ENCODED_PREVIOUS_TX = 'dummy encoded previous tx'
         DUMMY_PREVIOUS_TX_PROOF = 'dummy previous tx proof'
@@ -149,7 +148,6 @@ class TestClient(UnstubMixin):
         DUMMY_TX_BLK_NUM = 'dummy tx blk num'
         DUMMY_UID = 'dummy uid'
 
-        when(w3).toChecksumAddress(DUMMY_EXITOR).thenReturn(DUMMY_EXITOR)
         when(root_chain.functions).startExit(
             DUMMY_ENCODED_PREVIOUS_TX,
             DUMMY_PREVIOUS_TX_PROOF,
@@ -178,15 +176,14 @@ class TestClient(UnstubMixin):
             .encode(DUMMY_TX)
             .thenReturn(DUMMY_ENCODED_TX))
 
-        client.start_exit(DUMMY_EXITOR, DUMMY_UID, DUMMY_PREVIOUS_TX_BLK_NUM, DUMMY_TX_BLK_NUM)
+        client.start_exit(DUMMY_UID, DUMMY_PREVIOUS_TX_BLK_NUM, DUMMY_TX_BLK_NUM)
 
-        verify(MOCK_TRANSACT).transact({'from': DUMMY_EXITOR})
+        verify(MOCK_TRANSACT).transact({'from': client.address})
 
     def test_challenge_exit(self, client, root_chain):
         MOCK_BLOCK = mock()
         MOCK_TRANSACT = mock()
 
-        DUMMY_CHALLENGER = 'dummy challenger'
         DUMMY_UID = 'dummy uid'
         DUMMY_TX = 'dummy tx'
         DUMMY_TX_PROOF = 'dummy tx proof'
@@ -203,7 +200,6 @@ class TestClient(UnstubMixin):
         (when('plasma_cash.client.client.rlp')
             .encode(DUMMY_TX)
             .thenReturn(DUMMY_ENCODED_TX))
-        when(w3).toChecksumAddress(DUMMY_CHALLENGER).thenReturn(DUMMY_CHALLENGER)
         when(root_chain.functions).challengeExit(
             DUMMY_UID,
             DUMMY_ENCODED_TX,
@@ -211,15 +207,14 @@ class TestClient(UnstubMixin):
             DUMMY_TX_BLK_NUM
         ).thenReturn(MOCK_TRANSACT)
 
-        client.challenge_exit(DUMMY_CHALLENGER, DUMMY_UID, DUMMY_TX_BLK_NUM)
+        client.challenge_exit(DUMMY_UID, DUMMY_TX_BLK_NUM)
 
-        verify(MOCK_TRANSACT).transact({'from': DUMMY_CHALLENGER})
+        verify(MOCK_TRANSACT).transact({'from': client.address})
 
     def test_respond_challenge_exit(self, client, root_chain):
         MOCK_BLOCK = mock()
         MOCK_TRANSACT = mock()
 
-        DUMMY_RESPONDER = 'dummy responder'
         DUMMY_UID = 'dummy uid'
         DUMMY_CHALLENGE_TX = 'dummy challenge tx'
         DUMMY_TX = 'dummy tx'
@@ -237,7 +232,6 @@ class TestClient(UnstubMixin):
         (when('plasma_cash.client.client.rlp')
             .encode(DUMMY_TX)
             .thenReturn(DUMMY_ENCODED_TX))
-        when(w3).toChecksumAddress(DUMMY_RESPONDER).thenReturn(DUMMY_RESPONDER)
         when(root_chain.functions).respondChallengeExit(
             DUMMY_UID,
             DUMMY_CHALLENGE_TX,
@@ -246,20 +240,16 @@ class TestClient(UnstubMixin):
             DUMMY_TX_BLK_NUM
         ).thenReturn(MOCK_TRANSACT)
 
-        client.respond_challenge_exit(
-            DUMMY_RESPONDER,
-            DUMMY_CHALLENGE_TX,
-            DUMMY_UID,
-            DUMMY_TX_BLK_NUM
-        )
+        client.respond_challenge_exit(DUMMY_CHALLENGE_TX, DUMMY_UID, DUMMY_TX_BLK_NUM)
 
-        verify(MOCK_TRANSACT).transact({'from': DUMMY_RESPONDER})
+        verify(MOCK_TRANSACT).transact({'from': client.address})
 
     def test_finalize_exit(self, client, root_chain):
         DUMMY_UID = 'dummy uid'
-        DUMMY_EXITOR = '0x08d92dcA9038eA9433254996a2D4F08D43BE8227'
         MOCK_TRANSACT = mock()
 
         when(root_chain.functions).finalizeExit(DUMMY_UID).thenReturn(MOCK_TRANSACT)
-        client.finalize_exit(DUMMY_UID, DUMMY_EXITOR)
-        verify(MOCK_TRANSACT).transact({'from': DUMMY_EXITOR})
+
+        client.finalize_exit(DUMMY_UID)
+
+        verify(MOCK_TRANSACT).transact({'from': client.address})

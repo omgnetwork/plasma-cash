@@ -2,7 +2,6 @@ import os
 
 from plasma_cash.child_chain.child_chain import ChildChain
 from plasma_cash.client.child_chain_client import ChildChainClient
-from plasma_cash.client.client import Client
 from plasma_cash.config import PROJECT_DIR, db_config, plasma_config
 from plasma_cash.root_chain.deployer import Deployer
 from plasma_cash.utils.db.leveldb import LevelDb
@@ -53,13 +52,6 @@ class DependencyContainer(object):
                 'ws://localhost:8546'
             )
         return self._child_chain_client
-
-    def get_client(self):
-        if self._client is None:
-            root_chain = self.get_root_chain()
-            child_chain = self.get_child_chain_client()
-            self._client = Client(root_chain, child_chain)
-        return self._client
 
 
 container = DependencyContainer()
