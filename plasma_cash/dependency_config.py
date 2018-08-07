@@ -1,11 +1,11 @@
 import os
 
 from plasma_cash.child_chain.child_chain import ChildChain
+from plasma_cash.child_chain.db.leveldb import LevelDb
+from plasma_cash.child_chain.db.memory_db import MemoryDb
 from plasma_cash.client.child_chain_client import ChildChainClient
 from plasma_cash.config import PROJECT_DIR, db_config, plasma_config
 from plasma_cash.root_chain.deployer import Deployer
-from plasma_cash.utils.db.leveldb import LevelDb
-from plasma_cash.utils.db.memory_db import MemoryDb
 
 
 class DependencyContainer(object):
@@ -13,7 +13,6 @@ class DependencyContainer(object):
         self._root_chain = None
         self._child_chain = None
         self._child_chain_client = None
-        self._client = None
         self._db = None
 
     def get_db(self):

@@ -2,8 +2,8 @@ import pytest
 from mockito import ANY, when
 
 from plasma_cash.child_chain.block import Block
-from plasma_cash.utils.db.exceptions import BlockAlreadyExistsException
-from plasma_cash.utils.db.leveldb import LevelDb
+from plasma_cash.child_chain.db.exceptions import BlockAlreadyExistsException
+from plasma_cash.child_chain.db.leveldb import LevelDb
 from unit_tests.unstub_mixin import UnstubMixin
 
 
@@ -35,7 +35,7 @@ class TestLevelDb(UnstubMixin):
     @pytest.fixture(scope='function')
     def db(self):
         db = FakeLevelDb()
-        (when('plasma_cash.utils.db.leveldb.plyvel')
+        (when('plasma_cash.child_chain.db.leveldb.plyvel')
             .DB(ANY, create_if_missing=True).thenReturn(db))
         return LevelDb('test_db')
 

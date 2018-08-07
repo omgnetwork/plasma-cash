@@ -7,6 +7,7 @@ from mockito import ANY, expect, mock, verify, when
 
 from plasma_cash.child_chain.block import Block
 from plasma_cash.child_chain.child_chain import ChildChain
+from plasma_cash.child_chain.db.memory_db import MemoryDb
 from plasma_cash.child_chain.exceptions import (InvalidBlockNumException,
                                                 InvalidBlockSignatureException,
                                                 InvalidTxSignatureException,
@@ -15,7 +16,6 @@ from plasma_cash.child_chain.exceptions import (InvalidBlockNumException,
                                                 TxAmountMismatchException,
                                                 TxWithSameUidAlreadyExists)
 from plasma_cash.child_chain.transaction import Transaction
-from plasma_cash.utils.db.memory_db import MemoryDb
 from unit_tests.unstub_mixin import UnstubMixin
 
 
