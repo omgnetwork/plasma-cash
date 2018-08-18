@@ -7,11 +7,10 @@ from web3.auto import w3
 
 from plasma_cash.utils.utils import get_sender
 
-from .event import emit
 from .block import Block
-from .exceptions import (InvalidBlockNumException,
-                         InvalidBlockSignatureException,
-                         InvalidTxSignatureException,
+from .event import emit
+from .exceptions import (DepositAlreadyAppliedException, InvalidBlockNumException,
+                         InvalidBlockSignatureException, InvalidTxSignatureException,
                          PreviousTxNotFoundException, TxAlreadySpentException,
                          TxAmountMismatchException, TxWithSameUidAlreadyExists)
 from .transaction import Transaction
@@ -26,23 +25,37 @@ class ChildChain(object):
         self.current_block = Block()
         self.current_block_number = self.db.get_current_block_num()
 
-        # Register a filter for deposit event
+        """
+        TODO: should be removed as there's operator cron job that's doing the job
+        here. Temperary keep this to not break integration test.
+        """
         deposit_filter = self.root_chain.eventFilter('Deposit', {'fromBlock': 0})
         worker = Thread(target=self.log_loop, args=(deposit_filter, 0.1), daemon=True)
         worker.start()
 
     def log_loop(self, event_filter, poll_interval):
+        """
+        TODO: should be removed as there's operator cron job that's doing the job
+        here. Temperary keep this to not break integration test.
+        """
         while True:
             for event in event_filter.get_new_entries():
-                self.apply_deposit(event)
+                depositor = event['args']['depositor']
+                amount = event['args']['amount']
+                uid = event['args']['uid']
+                self.apply_deposit(depositor, amount, uid)
             time.sleep(poll_interval)
 
-    def apply_deposit(self, event):
-        new_owner = utils.normalize_address(event['args']['depositor'])
-        amount = event['args']['amount']
-        uid = event['args']['uid']
-        deposit_tx = Transaction(0, uid, amount, new_owner)
-        self.current_block.add_tx(deposit_tx)
+    def apply_deposit(self, depositor, amount, uid):
+        new_owner = utils.normalize_address(depositor)
+
+        if not self.current_block.get_tx_by_uid(uid):
+            deposit_tx = Transaction(0, uid, amount, new_owner)
+            self.current_block.add_tx(deposit_tx)
+            return deposit_tx.hash
+
+        err_msg = 'deposit of uid: {} is already applied previously'.format(uid)
+        raise DepositAlreadyAppliedException(err_msg)
 
     def submit_block(self, sig):
         signature = bytes.fromhex(sig)

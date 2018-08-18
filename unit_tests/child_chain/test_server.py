@@ -51,17 +51,6 @@ class TestServer(UnstubMixin):
         resp = client.get('/proof', query_string={'blknum': 1, 'uid': 1})
         assert resp.data == DUMMY_PROOF.encode()
 
-    def test_submit_block(self, client):
-        (when('plasma_cash.child_chain.server.container')
-            .get_child_chain().thenReturn(self.CHILD_CHAIN))
-
-        SIG = 'sig'
-        DUMMY_MERKLE_HASH = 'merkle hash'
-        when(self.CHILD_CHAIN).submit_block(SIG).thenReturn(DUMMY_MERKLE_HASH)
-
-        resp = client.post('submit_block', data={'sig': SIG})
-        assert resp.data == DUMMY_MERKLE_HASH.encode()
-
     def test_send_tx(self, client):
         (when('plasma_cash.child_chain.server.container')
             .get_child_chain().thenReturn(self.CHILD_CHAIN))
@@ -71,4 +60,37 @@ class TestServer(UnstubMixin):
         when(self.CHILD_CHAIN).apply_transaction(DUMMY_TX).thenReturn(DUMMY_TX_HASH)
 
         resp = client.post('send_tx', data={'tx': DUMMY_TX})
+        assert resp.data == DUMMY_TX_HASH.encode()
+
+    def test_submit_block(self, client):
+        (when('plasma_cash.child_chain.server.container')
+            .get_child_chain().thenReturn(self.CHILD_CHAIN))
+
+        SIG = 'sig'
+        DUMMY_MERKLE_HASH = 'merkle hash'
+        when(self.CHILD_CHAIN).submit_block(SIG).thenReturn(DUMMY_MERKLE_HASH)
+
+        resp = client.post('/operator/submit_block', data={'sig': SIG})
+        assert resp.data == DUMMY_MERKLE_HASH.encode()
+
+    def test_apply_deposit(self, client):
+        (when('plasma_cash.child_chain.server.container')
+            .get_child_chain().thenReturn(self.CHILD_CHAIN))
+
+        DUMMY_DEPOSITOR = 'depositor'
+        DUMMY_AMOUNT = 123
+        DUMMY_UID = 0
+
+        data = {
+            'depositor': DUMMY_DEPOSITOR,
+            'amount': DUMMY_AMOUNT,
+            'uid': DUMMY_UID
+        }
+
+        DUMMY_TX_HASH = 'dummy tx hash'
+        (when(self.CHILD_CHAIN)
+            .apply_deposit(DUMMY_DEPOSITOR, DUMMY_AMOUNT, DUMMY_UID)
+            .thenReturn(DUMMY_TX_HASH))
+
+        resp = client.post('/operator/apply_deposit', data=data)
         assert resp.data == DUMMY_TX_HASH.encode()

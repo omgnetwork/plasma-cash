@@ -8,12 +8,12 @@ from mockito import ANY, expect, mock, verify, when
 from plasma_cash.child_chain.block import Block
 from plasma_cash.child_chain.child_chain import ChildChain
 from plasma_cash.child_chain.db.memory_db import MemoryDb
-from plasma_cash.child_chain.exceptions import (InvalidBlockNumException,
+from plasma_cash.child_chain.exceptions import (DepositAlreadyAppliedException,
+                                                InvalidBlockNumException,
                                                 InvalidBlockSignatureException,
                                                 InvalidTxSignatureException,
                                                 PreviousTxNotFoundException,
-                                                TxAlreadySpentException,
-                                                TxAmountMismatchException,
+                                                TxAlreadySpentException, TxAmountMismatchException,
                                                 TxWithSameUidAlreadyExists)
 from plasma_cash.child_chain.transaction import Transaction
 from unit_tests.unstub_mixin import UnstubMixin
@@ -59,21 +59,25 @@ class TestChildChain(UnstubMixin):
 
     def test_apply_deposit(self, child_chain):
         DUMMY_AMOUNT = 123
-        DUMMY_UID = 'dummy uid'
+        DUMMY_UID = 0
         DUMMY_ADDR = b'\xfd\x02\xec\xeeby~u\xd8k\xcf\xf1d.\xb0\x84J\xfb(\xc7'
 
-        event = {'args': {
-            'amount': DUMMY_AMOUNT,
-            'uid': DUMMY_UID,
-            'depositor': DUMMY_ADDR,
-        }}
-
-        child_chain.apply_deposit(event)
+        tx_hash = child_chain.apply_deposit(DUMMY_ADDR, DUMMY_AMOUNT, DUMMY_UID)
 
         tx = child_chain.current_block.transaction_set[0]
+        assert tx_hash == tx.hash
         assert tx.amount == DUMMY_AMOUNT
         assert tx.uid == DUMMY_UID
         assert tx.new_owner == eth_utils.normalize_address(DUMMY_ADDR)
+
+    def test_apply_deposit_should_fail_when_is_already_applied(self, child_chain, root_chain):
+        DUMMY_AMOUNT = 123
+        DUMMY_UID = 0
+        DUMMY_ADDR = b'\xfd\x02\xec\xeeby~u\xd8k\xcf\xf1d.\xb0\x84J\xfb(\xc7'
+
+        child_chain.apply_deposit(DUMMY_ADDR, DUMMY_AMOUNT, DUMMY_UID)
+        with pytest.raises(DepositAlreadyAppliedException):
+            child_chain.apply_deposit(DUMMY_ADDR, DUMMY_AMOUNT, DUMMY_UID)
 
     def test_submit_block(self, child_chain, root_chain):
         DUMMY_MERKLE = 'merkle hash'

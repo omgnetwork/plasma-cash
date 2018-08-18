@@ -65,12 +65,17 @@ class ChildChainClient(object):
         response = self.request(end_point, 'GET', params=params)
         return response.text
 
-    def submit_block(self, sig):
-        end_point = '/submit_block'
-        data = {'sig': sig}
-        self.request(end_point, 'POST', data=data)
-
     def send_transaction(self, tx):
         end_point = '/send_tx'
         data = {'tx': tx}
+        self.request(end_point, 'POST', data=data)
+
+    def submit_block(self, sig):
+        end_point = '/operator/submit_block'
+        data = {'sig': sig}
+        self.request(end_point, 'POST', data=data)
+
+    def apply_deposit(self, depositor, amount, uid):
+        end_point = '/operator/apply_deposit'
+        data = {'depositor': depositor, 'amount': amount, 'uid': uid}
         self.request(end_point, 'POST', data=data)

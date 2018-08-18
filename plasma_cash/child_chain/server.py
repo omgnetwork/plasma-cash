@@ -2,43 +2,39 @@ import json
 
 from flask import Blueprint, request
 
-from plasma_cash.child_chain import websocket, event
+from plasma_cash.child_chain import event, websocket
 from plasma_cash.dependency_config import container
 
-bp = Blueprint('api', __name__)
+api = Blueprint('api', __name__)
+operator = Blueprint('operator', __name__)
+
 clients = {}
 
 
-@bp.route('/block', methods=['GET'])
+@api.route('/block', methods=['GET'])
 def get_current_block():
     return container.get_child_chain().get_current_block()
 
 
-@bp.route('/block/<blknum>', methods=['GET'])
+@api.route('/block/<blknum>', methods=['GET'])
 def get_block(blknum):
     return container.get_child_chain().get_block(int(blknum))
 
 
-@bp.route('/proof', methods=['GET'])
+@api.route('/proof', methods=['GET'])
 def get_proof():
     blknum = int(request.args.get('blknum'))
     uid = int(request.args.get('uid'))
     return container.get_child_chain().get_proof(blknum, uid)
 
 
-@bp.route('/submit_block', methods=['POST'])
-def submit_block():
-    sig = request.form['sig']
-    return container.get_child_chain().submit_block(sig)
-
-
-@bp.route('/send_tx', methods=['POST'])
+@api.route('/send_tx', methods=['POST'])
 def send_tx():
     tx = request.form['tx']
     return container.get_child_chain().apply_transaction(tx)
 
 
-@bp.route('/', methods=['GET'])
+@api.route('/', methods=['GET'])
 def root():
     global clients
 
@@ -50,6 +46,20 @@ def root():
 
     # Path / is not an API entry
     return ''
+
+
+@operator.route('/submit_block', methods=['POST'])
+def submit_block():
+    sig = request.form['sig']
+    return container.get_child_chain().submit_block(sig)
+
+
+@operator.route('/apply_deposit', methods=['POST'])
+def apply_deposit():
+    depositor = request.form['depositor']
+    amount = int(request.form['amount'])
+    uid = int(request.form['uid'])
+    return container.get_child_chain().apply_deposit(depositor, amount, uid)
 
 
 @event.on('websocket.join')

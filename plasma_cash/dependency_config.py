@@ -3,7 +3,7 @@ import os
 from plasma_cash.child_chain.child_chain import ChildChain
 from plasma_cash.child_chain.db.leveldb import LevelDb
 from plasma_cash.child_chain.db.memory_db import MemoryDb
-from plasma_cash.client.child_chain_client import ChildChainClient
+from plasma_cash.child_chain.child_chain_client import ChildChainClient
 from plasma_cash.config import PROJECT_DIR, db_config, plasma_config
 from plasma_cash.root_chain.deployer import Deployer
 

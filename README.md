@@ -80,9 +80,15 @@ Deploy contract:
 python deployment.py
 ```
 
-Run child chain:
+Run child chain Server:
 ```
 python -m plasma_cash.child_chain
+```
+
+Run operator cron jobs:
+(TODO: the following commands does not support running with cron job yet)
+```
+python -m plasma_cash.operator_cron_job
 ```
 
 Client:

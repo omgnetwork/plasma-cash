@@ -1,6 +1,6 @@
-import rlp
 import time
 
+import rlp
 from behave import given, then, when
 
 from integration_tests.features.utils import has_value

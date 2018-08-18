@@ -1,8 +1,8 @@
 import pytest
 from mockito import mock, verify, when
 
-from plasma_cash.client.child_chain_client import ChildChainClient
-from plasma_cash.client.exceptions import RequestFailedException
+from plasma_cash.child_chain.child_chain_client import ChildChainClient
+from plasma_cash.child_chain.exceptions import RequestFailedException
 from unit_tests.unstub_mixin import UnstubMixin
 
 
@@ -64,7 +64,7 @@ class TestChildChainClient(UnstubMixin):
 
         MOCK_RESPONSE = mock({'ok': True})
 
-        (when('plasma_cash.client.child_chain_client.requests')
+        (when('plasma_cash.child_chain.child_chain_client.requests')
             .request(
                 method=DUMMY_METHOD,
                 url=URL,
@@ -96,7 +96,7 @@ class TestChildChainClient(UnstubMixin):
 
         MOCK_RESPONSE = mock({'ok': False})
 
-        (when('plasma_cash.client.child_chain_client.requests')
+        (when('plasma_cash.child_chain.child_chain_client.requests')
             .request(
                 method=DUMMY_METHOD,
                 url=URL,
@@ -144,16 +144,6 @@ class TestChildChainClient(UnstubMixin):
         resp = client.get_proof(DUMMY_BLK_NUM, DUMMY_UID)
         assert resp == RESP_TEXT
 
-    def test_submit_block(self, client):
-        DUMMY_SIG = 'sig'
-        when(client).request(any, any, data=any).thenReturn(None)
-        client.submit_block(DUMMY_SIG)
-        verify(client).request(
-            '/submit_block',
-            'POST',
-            data={'sig': DUMMY_SIG}
-        )
-
     def test_send_transaction(self, client):
         DUMMY_TX = 'tx'
         when(client).request(any, any, data=any).thenReturn(None)
@@ -162,4 +152,33 @@ class TestChildChainClient(UnstubMixin):
             '/send_tx',
             'POST',
             data={'tx': DUMMY_TX}
+        )
+
+    def test_submit_block(self, client):
+        DUMMY_SIG = 'sig'
+        when(client).request(any, any, data=any).thenReturn(None)
+        client.submit_block(DUMMY_SIG)
+        verify(client).request(
+            '/operator/submit_block',
+            'POST',
+            data={'sig': DUMMY_SIG}
+        )
+
+    def test_apply_deposit(self, client):
+        DUMMY_DEPOSITOR = 'depositor'
+        DUMMY_AMOUNT = 123
+        DUMMY_UID = 0
+
+        when(client).request(any, any, data=any).thenReturn(None)
+        client.apply_deposit(DUMMY_DEPOSITOR, DUMMY_AMOUNT, DUMMY_UID)
+
+        request_data = {
+            'depositor': DUMMY_DEPOSITOR,
+            'amount': DUMMY_AMOUNT,
+            'uid': DUMMY_UID
+        }
+        verify(client).request(
+            '/operator/apply_deposit',
+            'POST',
+            data=request_data
         )

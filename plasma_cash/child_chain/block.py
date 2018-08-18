@@ -14,12 +14,6 @@ class Block(rlp.Serializable):
     ]
 
     def __init__(self, transaction_set=None):
-        # There's a weird bug that when using
-        # def __init__(self, transaction_set=[],...)
-        # `transaction_set` would sometimes NOT be an empty list
-        # this happens after calling `add_tx(tx)`
-        # whenever new a Block(), the transaction_set would not be empty
-        # as a result, use if None statement to enforce empty list instead
         if transaction_set is None:
             transaction_set = []
 

@@ -109,22 +109,6 @@ class TestClient(UnstubMixin):
 
         assert client.get_current_block() == DUMMY_DECODED_BLOCK
 
-    def test_get_block(self, child_chain, client):
-        DUMMY_BLOCK = 'dummy block'
-        DUMMY_BLOCK_NUM = 'dummy block num'
-        DUMMY_BLOCK_HEX = 'dummy block hex'
-        DUMMY_DECODED_BLOCK = 'decoded block'
-
-        when(child_chain).get_block(DUMMY_BLOCK_NUM).thenReturn(DUMMY_BLOCK)
-        (when('plasma_cash.client.client.utils')
-            .decode_hex(DUMMY_BLOCK)
-            .thenReturn(DUMMY_BLOCK_HEX))
-        (when('plasma_cash.client.client.rlp')
-            .decode(DUMMY_BLOCK_HEX, Block)
-            .thenReturn(DUMMY_DECODED_BLOCK))
-
-        assert client.get_block(DUMMY_BLOCK_NUM) == DUMMY_DECODED_BLOCK
-
     def test_get_proof(self, child_chain, client):
         DUMMY_BLOCK_NUM = 'dummy block num'
         DUMMY_PROOF = 'dummy proof'

@@ -1,6 +1,6 @@
-import rlp
 import time
 
+import rlp
 from behave import given, then, when
 from ethereum import utils
 

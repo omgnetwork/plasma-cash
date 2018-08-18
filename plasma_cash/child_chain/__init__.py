@@ -10,6 +10,7 @@ def create_app(is_unit_test=False):
         container.get_child_chain()
 
     from . import server
-    app.register_blueprint(server.bp)
+    app.register_blueprint(server.api)
+    app.register_blueprint(server.operator, url_prefix='/operator')
 
     return app

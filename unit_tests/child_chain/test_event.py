@@ -1,6 +1,6 @@
 from mockito import ANY, mock, verify, when
 
-from plasma_cash.child_chain.event import on, emit
+from plasma_cash.child_chain.event import emit, on
 from unit_tests.unstub_mixin import UnstubMixin
 
 handler = None

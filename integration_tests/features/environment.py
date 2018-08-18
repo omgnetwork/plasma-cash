@@ -1,7 +1,7 @@
 import os
 import signal
 import time
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
 
 from plasma_cash.root_chain.deployer import Deployer
 

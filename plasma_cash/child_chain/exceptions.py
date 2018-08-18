@@ -24,3 +24,11 @@ class InvalidBlockNumException(Exception):
 
 class TxWithSameUidAlreadyExists(Exception):
     """the block already has one tx with the uid"""
+
+
+class RequestFailedException(Exception):
+    """request failed without success http status"""
+
+
+class DepositAlreadyAppliedException(Exception):
+    """the deposit is already applied"""
