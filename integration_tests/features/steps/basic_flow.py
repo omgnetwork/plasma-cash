@@ -119,4 +119,4 @@ def userB_finalize_exit(context):
 def userB_successfully_exit_from_root_chain_after_exit(context, amount):
     balance = w3.eth.getBalance(userB)
     assert_msg = 'balance: {} is not in around: {}'.format(w3.fromWei(balance, 'ether'), amount)
-    assert w3.toWei(amount - 0.01, 'ether') <= balance <= w3.toWei(amount, 'ether'), assert_msg
+    assert w3.toWei(amount - 0.05, 'ether') <= balance <= w3.toWei(amount, 'ether'), assert_msg
