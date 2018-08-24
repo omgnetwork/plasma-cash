@@ -1,7 +1,7 @@
 import pytest
 
-from plasma_cash.utils.db.exceptions import BlockAlreadyExistsException
-from plasma_cash.utils.db.memory_db import MemoryDb
+from plasma_cash.child_chain.db.exceptions import BlockAlreadyExistsException
+from plasma_cash.child_chain.db.memory_db import MemoryDb
 
 
 class TestMemoryDb(object):
