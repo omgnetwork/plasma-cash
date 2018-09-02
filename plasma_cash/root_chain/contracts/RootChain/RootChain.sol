@@ -149,7 +149,7 @@ contract RootChain {
         bytes32 root = childChain[blkNum];
         require(merkleHash.checkMembership(uid, root, proof));
 
-        if (exitTxObj.newOwner == challengeTxObj.signer) {
+        if (blkNum > exits[uid].exitTxBlkNum && exitTxObj.newOwner == challengeTxObj.signer) {
             // Challenge tx spent the exit tx. Cancel it.
             delete exits[uid].hasValue;
         } else if (blkNum < exits[uid].exitTxBlkNum
