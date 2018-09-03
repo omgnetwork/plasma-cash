@@ -40,16 +40,37 @@ class TestClient(UnstubMixin):
 
         assert client.address == DUMMY_ADDRESS
 
+    def test_sign_and_send_tx(self, client):
+        DUMMY_NONCE = 123
+        DUMMY_TX = {
+            'gas': 100,
+            'gasPrice': 100,
+            'nonce': DUMMY_NONCE
+        }
+        (when('plasma_cash.client.client.w3.eth')
+            .getTransactionCount(ANY, ANY).thenReturn(DUMMY_NONCE))
+        when('plasma_cash.client.client.w3.eth').sendRawTransaction(ANY).thenReturn(None)
+
+        client._sign_and_send_tx(DUMMY_TX)
+
+        verify('plasma_cash.client.client.w3.eth').sendRawTransaction(ANY)
+
     def test_deposit(self, client, root_chain):
-        MOCK_TRANSACT = mock()
         DUMMY_AMOUNT = 1
         DUMMY_CURRENCY = '0x0000000000000000000000000000000000000000'
 
-        when(root_chain.functions).deposit(DUMMY_CURRENCY, DUMMY_AMOUNT).thenReturn(MOCK_TRANSACT)
+        MOCK_FUNCTION = mock()
+        TX = mock()
+        when(root_chain.functions).deposit(DUMMY_CURRENCY, DUMMY_AMOUNT).thenReturn(MOCK_FUNCTION)
+        when(MOCK_FUNCTION).buildTransaction({
+            'from': client.address,
+            'value': DUMMY_AMOUNT * 10**18
+        }).thenReturn(TX)
+        when(client)._sign_and_send_tx(ANY).thenReturn(None)
 
         client.deposit(DUMMY_AMOUNT, DUMMY_CURRENCY)
 
-        verify(MOCK_TRANSACT).transact({'from': client.address, 'value': DUMMY_AMOUNT * 10**18})
+        verify(client)._sign_and_send_tx(ANY)
 
     def test_submit_block(self, client, child_chain):
         MOCK_HASH = 'mock hash'
@@ -59,6 +80,7 @@ class TestClient(UnstubMixin):
 
         when(client).get_current_block().thenReturn(MOCK_BLOCK)
         when('plasma_cash.client.client').sign(MOCK_HASH, client.key).thenReturn(MOCK_SIG)
+        when(client)._sign_and_send_tx(ANY).thenReturn(None)
 
         client.submit_block()
 
@@ -118,7 +140,6 @@ class TestClient(UnstubMixin):
         assert client.get_proof(DUMMY_BLOCK_NUM, DUMMY_UID) == DUMMY_PROOF
 
     def test_start_exit(self, client, root_chain):
-        MOCK_TRANSACT = mock()
         MOCK_PREVIOUS_BLOCK = mock()
         MOCK_BLOCK = mock()
 
@@ -139,7 +160,7 @@ class TestClient(UnstubMixin):
             DUMMY_ENCODED_TX,
             DUMMY_TX_PROOF,
             DUMMY_TX_BLK_NUM
-        ).thenReturn(MOCK_TRANSACT)
+        ).thenReturn(mock())
         when(client).get_block(DUMMY_PREVIOUS_TX_BLK_NUM).thenReturn(MOCK_PREVIOUS_BLOCK)
         when(client).get_block(DUMMY_TX_BLK_NUM).thenReturn(MOCK_BLOCK)
         when(MOCK_PREVIOUS_BLOCK).get_tx_by_uid(DUMMY_UID).thenReturn(DUMMY_PREVIOUS_TX)
@@ -159,14 +180,14 @@ class TestClient(UnstubMixin):
         (when('plasma_cash.client.client.rlp')
             .encode(DUMMY_TX)
             .thenReturn(DUMMY_ENCODED_TX))
+        when(client)._sign_and_send_tx(ANY).thenReturn(None)
 
         client.start_exit(DUMMY_UID, DUMMY_PREVIOUS_TX_BLK_NUM, DUMMY_TX_BLK_NUM)
 
-        verify(MOCK_TRANSACT).transact({'from': client.address})
+        verify(client)._sign_and_send_tx(ANY)
 
     def test_challenge_exit(self, client, root_chain):
         MOCK_BLOCK = mock()
-        MOCK_TRANSACT = mock()
 
         DUMMY_UID = 'dummy uid'
         DUMMY_TX = 'dummy tx'
@@ -189,15 +210,15 @@ class TestClient(UnstubMixin):
             DUMMY_ENCODED_TX,
             DUMMY_TX_PROOF,
             DUMMY_TX_BLK_NUM
-        ).thenReturn(MOCK_TRANSACT)
+        ).thenReturn(mock())
+        when(client)._sign_and_send_tx(ANY).thenReturn(None)
 
         client.challenge_exit(DUMMY_UID, DUMMY_TX_BLK_NUM)
 
-        verify(MOCK_TRANSACT).transact({'from': client.address})
+        verify(client)._sign_and_send_tx(ANY)
 
     def test_respond_challenge_exit(self, client, root_chain):
         MOCK_BLOCK = mock()
-        MOCK_TRANSACT = mock()
 
         DUMMY_UID = 'dummy uid'
         DUMMY_CHALLENGE_TX = 'dummy challenge tx'
@@ -222,18 +243,19 @@ class TestClient(UnstubMixin):
             DUMMY_ENCODED_TX,
             DUMMY_TX_PROOF,
             DUMMY_TX_BLK_NUM
-        ).thenReturn(MOCK_TRANSACT)
+        ).thenReturn(mock())
+        when(client)._sign_and_send_tx(ANY).thenReturn(None)
 
         client.respond_challenge_exit(DUMMY_CHALLENGE_TX, DUMMY_UID, DUMMY_TX_BLK_NUM)
 
-        verify(MOCK_TRANSACT).transact({'from': client.address})
+        verify(client)._sign_and_send_tx(ANY)
 
     def test_finalize_exit(self, client, root_chain):
         DUMMY_UID = 'dummy uid'
-        MOCK_TRANSACT = mock()
 
-        when(root_chain.functions).finalizeExit(DUMMY_UID).thenReturn(MOCK_TRANSACT)
+        when(root_chain.functions).finalizeExit(DUMMY_UID).thenReturn(mock())
+        when(client)._sign_and_send_tx(ANY).thenReturn(None)
 
         client.finalize_exit(DUMMY_UID)
 
-        verify(MOCK_TRANSACT).transact({'from': client.address})
+        verify(client)._sign_and_send_tx(ANY)

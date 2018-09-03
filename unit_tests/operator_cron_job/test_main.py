@@ -26,7 +26,7 @@ class TestMain(UnstubMixin):
 
     def test_setup_job_handler(self, root_chain, child_chain):
         (when('plasma_cash.operator_cron_job.__main__.container')
-            .get_child_chain().thenReturn(child_chain))
+            .get_child_chain_client().thenReturn(child_chain))
 
         (when('plasma_cash.operator_cron_job.__main__.container')
             .get_root_chain().thenReturn(root_chain))

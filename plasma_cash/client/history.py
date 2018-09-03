@@ -1,5 +1,5 @@
 import rlp
-from rlp.sedes import big_endian_int, binary, CountableList
+from rlp.sedes import CountableList, big_endian_int, binary
 
 from .exceptions import TxHistoryNotFoundException
 

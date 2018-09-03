@@ -1,9 +1,9 @@
 import os
 
 from plasma_cash.child_chain.child_chain import ChildChain
+from plasma_cash.child_chain.child_chain_client import ChildChainClient
 from plasma_cash.child_chain.db.leveldb import LevelDb
 from plasma_cash.child_chain.db.memory_db import MemoryDb
-from plasma_cash.child_chain.child_chain_client import ChildChainClient
 from plasma_cash.config import PROJECT_DIR, db_config, plasma_config
 from plasma_cash.root_chain.deployer import Deployer
 
@@ -38,10 +38,10 @@ class DependencyContainer(object):
 
     def get_child_chain(self):
         if self._child_chain is None:
-            authority = plasma_config['AUTHORITY']
+            key = plasma_config['AUTHORITY_KEY']
             root_chain = self.get_root_chain()
             db = self.get_db()
-            self._child_chain = ChildChain(authority, root_chain, db)
+            self._child_chain = ChildChain(key, root_chain, db)
         return self._child_chain
 
     def get_child_chain_client(self):

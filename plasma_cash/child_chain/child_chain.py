@@ -18,9 +18,10 @@ from .transaction import Transaction
 
 class ChildChain(object):
 
-    def __init__(self, authority, root_chain, db):
+    def __init__(self, key, root_chain, db):
+        self.key = utils.normalize_key(key)
+        self.authority = utils.privtoaddr(self.key)
         self.root_chain = root_chain
-        self.authority = authority
         self.db = db
         self.current_block = Block()
         self.current_block_number = self.db.get_current_block_num()
@@ -66,9 +67,15 @@ class ChildChain(object):
         merkle_hash = self.current_block.merklize_transaction_set()
 
         authority_address = w3.toChecksumAddress('0x' + self.authority.hex())
-        self.root_chain.functions.submitBlock(merkle_hash, self.current_block_number).transact(
-            {'from': authority_address}
-        )
+        tx = (self.root_chain.functions
+              .submitBlock(merkle_hash, self.current_block_number)
+              .buildTransaction({
+                  'from': authority_address,
+                  'nonce': w3.eth.getTransactionCount(authority_address, 'pending')
+              }))
+
+        signed = w3.eth.account.signTransaction(tx, self.key)
+        w3.eth.sendRawTransaction(signed.rawTransaction)
 
         emit('chain.block', self.current_block_number)
         self.db.save_block(self.current_block, self.current_block_number)
