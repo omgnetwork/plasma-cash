@@ -18,11 +18,17 @@ class Client(object):
     def address(self):
         return w3.toChecksumAddress(utils.privtoaddr(self.key))
 
+    def _sign_and_send_tx(self, tx):
+        tx['nonce'] = w3.eth.getTransactionCount(self.address, 'pending')
+        signed = w3.eth.account.signTransaction(tx, self.key)
+        w3.eth.sendRawTransaction(signed.rawTransaction)
+
     def deposit(self, amount, currency):
         value = w3.toWei(amount, 'ether') if currency == '0x' + '00' * 20 else 0
-        self.root_chain.functions.deposit(currency, amount).transact(
+        tx = self.root_chain.functions.deposit(currency, amount).buildTransaction(
             {'from': self.address, 'value': value}
         )
+        self._sign_and_send_tx(tx)
 
     def submit_block(self):
         # TODO: this method should be a cron job in child chain
@@ -65,14 +71,15 @@ class Client(object):
         block.merklize_transaction_set()
         tx_proof = block.merkle.create_merkle_proof(uid)
 
-        self.root_chain.functions.startExit(
+        tx = self.root_chain.functions.startExit(
             rlp.encode(prev_tx),
             prev_tx_proof,
             prev_tx_blk_num,
             rlp.encode(tx),
             tx_proof,
             tx_blk_num
-        ).transact({'from': self.address})
+        ).buildTransaction({'from': self.address})
+        self._sign_and_send_tx(tx)
 
     def challenge_exit(self, uid, tx_blk_num):
         block = self.get_block(tx_blk_num)
@@ -81,9 +88,10 @@ class Client(object):
         block.merklize_transaction_set()
         tx_proof = block.merkle.create_merkle_proof(uid)
 
-        self.root_chain.functions.challengeExit(
+        tx = self.root_chain.functions.challengeExit(
             uid, rlp.encode(challenge_tx), tx_proof, tx_blk_num
-        ).transact({'from': self.address})
+        ).buildTransaction({'from': self.address})
+        self._sign_and_send_tx(tx)
 
     def respond_challenge_exit(self, challenge_tx, uid, tx_blk_num):
         block = self.get_block(tx_blk_num)
@@ -92,9 +100,11 @@ class Client(object):
         block.merklize_transaction_set()
         tx_proof = block.merkle.create_merkle_proof(uid)
 
-        self.root_chain.functions.respondChallengeExit(
+        tx = self.root_chain.functions.respondChallengeExit(
             uid, challenge_tx, rlp.encode(respond_tx), tx_proof, tx_blk_num
-        ).transact({'from': self.address})
+        ).buildTransaction({'from': self.address})
+        self._sign_and_send_tx(tx)
 
     def finalize_exit(self, uid):
-        self.root_chain.functions.finalizeExit(uid).transact({'from': self.address})
+        tx = self.root_chain.functions.finalizeExit(uid).buildTransaction({'from': self.address})
+        self._sign_and_send_tx(tx)

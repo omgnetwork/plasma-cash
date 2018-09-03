@@ -3,7 +3,7 @@ from threading import Thread
 import pytest
 import rlp
 from ethereum import utils as eth_utils
-from mockito import ANY, expect, mock, verify, when
+from mockito import ANY, expect, mock, when
 
 from plasma_cash.child_chain.block import Block
 from plasma_cash.child_chain.child_chain import ChildChain
@@ -20,8 +20,7 @@ from unit_tests.unstub_mixin import UnstubMixin
 
 
 class TestChildChain(UnstubMixin):
-    DUMMY_AUTHORITY = b"\x14\x7f\x08\x1b\x1a6\xa8\r\xf0Y\x15(ND'\xc1\xf6\xdd\x98\x84"
-    DUMMY_SIG = '01' * 65  # sig for DUMMY_AUTHORITY
+    DUMMY_KEY = '0xa18969817c2cefadf52b93eb20f917dce760ce13b2ac9025e0361ad1e7a1d448'
     DUMMY_TX_NEW_OWNER = b'\xfd\x02\xec\xeeby~u\xd8k\xcf\xf1d.\xb0\x84J\xfb(\xc7'
 
     @pytest.fixture(scope='function')
@@ -40,7 +39,7 @@ class TestChildChain(UnstubMixin):
 
         expect(root_chain).eventFilter('Deposit', {'fromBlock': 0})
         expect(Thread).start()
-        child_chain = ChildChain(self.DUMMY_AUTHORITY, root_chain, db)
+        child_chain = ChildChain(self.DUMMY_KEY, root_chain, db)
 
         # create a dummy transaction
         tx = Transaction(prev_block=0, uid=1, amount=10, new_owner=DUMMY_TX_OWNER)
@@ -55,7 +54,7 @@ class TestChildChain(UnstubMixin):
         expect(root_chain).eventFilter('Deposit', {'fromBlock': 0})
         expect(Thread).start()
 
-        ChildChain(self.DUMMY_AUTHORITY, root_chain, db)
+        ChildChain(self.DUMMY_KEY, root_chain, db)
 
     def test_apply_deposit(self, child_chain):
         DUMMY_AMOUNT = 123
@@ -81,18 +80,27 @@ class TestChildChain(UnstubMixin):
 
     def test_submit_block(self, child_chain, root_chain):
         DUMMY_MERKLE = 'merkle hash'
-        MOCK_TRANSACT = mock()
+        MOCK_FUNCTION = mock()
+        DUMMY_NONCE = 100
+        DUMMY_TX = {'nonce': DUMMY_NONCE, 'gas': 100, 'gasPrice': 100}
 
         block_number = child_chain.current_block_number
         block = child_chain.current_block
         when(child_chain.current_block).merklize_transaction_set().thenReturn(DUMMY_MERKLE)
         (when(root_chain.functions)
             .submitBlock(DUMMY_MERKLE, block_number)
-            .thenReturn(MOCK_TRANSACT))
+            .thenReturn(MOCK_FUNCTION))
+        when(MOCK_FUNCTION).buildTransaction(ANY).thenReturn(DUMMY_TX)
+        (when('plasma_cash.child_chain.child_chain')
+            .get_sender(ANY, ANY).thenReturn(child_chain.authority))
+        (when('plasma_cash.child_chain.child_chain.w3.eth')
+            .getTransactionCount(ANY, ANY).thenReturn(DUMMY_NONCE))
+        (when('plasma_cash.child_chain.child_chain.w3.eth')
+            .sendRawTransaction(ANY).thenReturn(None))
 
-        child_chain.submit_block(self.DUMMY_SIG)
+        DUMMY_SIG = '01' * 65
+        child_chain.submit_block(DUMMY_SIG)
 
-        verify(MOCK_TRANSACT).transact(ANY)
         assert child_chain.current_block_number == block_number + 1
         assert child_chain.db.get_block(block_number) == block
         assert child_chain.current_block == Block()

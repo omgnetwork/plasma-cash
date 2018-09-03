@@ -49,14 +49,18 @@ class Deployer(object):
         abi, bytecode, contract_name = self.compile_contract(path, args)
         contract = w3.eth.contract(abi=abi, bytecode=bytecode)
 
-        # Get transaction hash from deployed contract
-        tx_hash = contract.deploy(
-            transaction={'from': w3.eth.accounts[0], 'gas': gas},
-            args=args
-        )
+        address = w3.toChecksumAddress(plasma_config['AUTHORITY'].hex())
+        key = plasma_config['AUTHORITY_KEY']
+        tx = contract.constructor().buildTransaction({
+            'from': address,
+            'nonce': w3.eth.getTransactionCount(address, 'pending')
+        })
+        signed = w3.eth.account.signTransaction(tx, key)
+        tx_hash = w3.eth.sendRawTransaction(signed.rawTransaction)
+        tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
 
-        print('Successfully deployed {} contract with tx hash {}!'.format(
-            contract_name, tx_hash.hex()))
+        print('Successfully deployed {} contract with tx hash {} in contract address {}!'.format(
+            contract_name, tx_hash.hex(), tx_receipt.contractAddress))
 
     def get_contract(self, path):
         file_name = path.split('/')[1]
