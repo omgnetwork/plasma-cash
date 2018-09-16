@@ -13,7 +13,14 @@ contract RootChain {
     /*
      * Events
      */
-    event Deposit(address depositor, uint256 amount, uint256 uid);
+    event Deposit(string eventName,address depositor, uint256 amount, uint256 uid);
+    event SubmitBlock(string eventName, uint256 currentBlockNum, bytes32 blockHash);
+    event StartExit(string eventName, uint256 exitTxBlkNum, uint256 uid);
+    event ChallengeAlreadySpent(string eventName, uint256 uid);
+    event ChallengeDoubleSpending(string eventName, uint256 uid);
+    event ChallengeHistory(string eventName, uint256 uid);
+    event RespondChallengeExit(string eventName, uint256 uid);
+    event FinalizeExit(string eventName, uint256 uid);
 
     /*
      * Storage
@@ -61,6 +68,8 @@ contract RootChain {
         isAuthority
     {
         require(currentBlkNum + 1 == blknum);
+
+        emit SubmitBlock("SubmitBlock", currentBlkNum, blkRoot);
         childChain[blknum] = blkRoot;
         currentBlkNum += 1;
     }
@@ -80,7 +89,7 @@ contract RootChain {
         uint uid = uint256(keccak256(currency, msg.sender, depositCount));
         wallet[uid] = amount;
         depositCount += 1;
-        emit Deposit(msg.sender, amount, uid);
+        emit Deposit("Deposit", msg.sender, amount, uid);
         return uid;
     }
 
@@ -128,6 +137,7 @@ contract RootChain {
             txBeforeExitTx: prevTx,
             owner: msg.sender
         });
+        emit StartExit("StartExit", txBlkNum, txObj.uid);
     }
 
     // @dev Challenge an exit transaction
@@ -152,10 +162,12 @@ contract RootChain {
         if (blkNum > exits[uid].exitTxBlkNum && exitTxObj.newOwner == challengeTxObj.signer) {
             // Challenge tx spent the exit tx. Cancel it.
             delete exits[uid].hasValue;
+            emit ChallengeAlreadySpent("ChallengeAlreadySpent", uid);
         } else if (blkNum < exits[uid].exitTxBlkNum
             && txBeforeExitTxObj.newOwner == challengeTxObj.signer) {
             // Exit tx double spent the previous tx. Cancel it.
             delete exits[uid].hasValue;
+            emit ChallengeDoubleSpending("ChallengeDoubleSpending", uid);
         } else if (blkNum < exits[uid].txBeforeExitTxBlkNum) {
             // Challenger provides a tx in history. Exitor needs to respond it.
             if (!challenges[uid].contains(challengeTx)) {
@@ -164,6 +176,7 @@ contract RootChain {
                     challengeTx: challengeTx,
                     challengeTxBlkNum: blkNum
                 }));
+                emit ChallengeHistory("ChallengeHistory", uid);
             }
         }
     }
@@ -200,6 +213,7 @@ contract RootChain {
 
         // Challenge has been responded. Cancel it.
         challenges[uid].remove(challengeTx);
+        emit RespondChallengeExit("RespondChallengeExit", uid);
     }
 
     // @dev Finalize an exit
@@ -213,6 +227,7 @@ contract RootChain {
 
         exits[uid].owner.transfer(wallet[uid]*10**18);
         delete exits[uid].hasValue;
+        emit FinalizeExit("FinalizeExit", uid);
     }
 
     function isChallengeExisted(uint uid, bytes challengeTx) public returns (bool) {

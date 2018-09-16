@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(prog=__package__)
     parser.add_argument('--host', default='127.0.0.1', help='Hostname to listen on.')
-    parser.add_argument('--port', default='8546', help='Port number to listen on.')
+    parser.add_argument('--port', default='8547', help='Port number to listen on.')
     args = parser.parse_args()
 
     print('Listening on ' + args.host + ':' + args.port)
