@@ -27,9 +27,6 @@ def userA_deposits_some_amount_of_eth_in_plasma_cash(context, amount):
     client.deposit(amount=amount, currency=eth_currency)
     time.sleep(5)
 
-    operator = Client(container.get_root_chain(), container.get_child_chain_client(), operator_key)
-    operator.submit_block()
-
 
 @given('userA transfers {amount:d} eth to userB')
 def userA_transfers_some_eth_to_userB(context, amount):

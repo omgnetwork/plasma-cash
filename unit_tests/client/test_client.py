@@ -186,6 +186,44 @@ class TestClient(UnstubMixin):
 
         verify(client)._sign_and_send_tx(ANY)
 
+    def test_abort_deposit(self, client, root_chain):
+        DUMMY_UID = 'dummy uid'
+        when(root_chain.functions).abortDeposit(DUMMY_UID).thenReturn(mock())
+        when(client)._sign_and_send_tx(ANY).thenReturn(None)
+
+        client.abort_deposit(DUMMY_UID)
+        verify(client)._sign_and_send_tx(ANY)
+
+    def test_start_deposit_exit(self, client, root_chain):
+        MOCK_BLOCK = mock()
+
+        DUMMY_TX = 'dummy tx'
+        DUMMY_ENCODED_TX = 'dummy encoded tx'
+        DUMMY_TX_PROOF = 'dummy tx proof'
+        DUMMY_TX_BLK_NUM = 'dummy tx blk num'
+        DUMMY_UID = 'dummy uid'
+
+        when(root_chain.functions).startDepositExit(
+            DUMMY_ENCODED_TX,
+            DUMMY_TX_PROOF,
+            DUMMY_TX_BLK_NUM
+        ).thenReturn(mock())
+        when(client).get_block(DUMMY_TX_BLK_NUM).thenReturn(MOCK_BLOCK)
+        when(MOCK_BLOCK).get_tx_by_uid(DUMMY_UID).thenReturn(DUMMY_TX)
+
+        MOCK_BLOCK.merkle = mock()
+        (when(MOCK_BLOCK.merkle)
+            .create_merkle_proof(DUMMY_UID)
+            .thenReturn(DUMMY_TX_PROOF))
+        (when('plasma_cash.client.client.rlp')
+            .encode(DUMMY_TX)
+            .thenReturn(DUMMY_ENCODED_TX))
+        when(client)._sign_and_send_tx(ANY).thenReturn(None)
+
+        client.start_deposit_exit(DUMMY_UID, DUMMY_TX_BLK_NUM)
+
+        verify(client)._sign_and_send_tx(ANY)
+
     def test_challenge_exit(self, client, root_chain):
         MOCK_BLOCK = mock()
 

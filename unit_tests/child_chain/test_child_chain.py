@@ -60,7 +60,13 @@ class TestChildChain(UnstubMixin):
         DUMMY_AMOUNT = 123
         DUMMY_UID = 0
         DUMMY_ADDR = b'\xfd\x02\xec\xeeby~u\xd8k\xcf\xf1d.\xb0\x84J\xfb(\xc7'
+        DUMMY_SIG = ('e79be9e20e121a8447b845c1b95b30b9bc4ed33db1de8e0f2c4401f56660506b7' +
+                     'f67dde4068f0a3a3763ef15d0c86988db8bbdaddfa9f42a36a9721349433e051b')
+        DUMMY_IS_DEPOSIT_BLOCK = True
 
+        (when(child_chain)
+            .submit_block(DUMMY_SIG, DUMMY_IS_DEPOSIT_BLOCK, DUMMY_UID)
+            .thenReturn(None))
         tx_hash = child_chain.apply_deposit(DUMMY_ADDR, DUMMY_AMOUNT, DUMMY_UID)
 
         tx = child_chain.current_block.transaction_set[0]
@@ -73,7 +79,13 @@ class TestChildChain(UnstubMixin):
         DUMMY_AMOUNT = 123
         DUMMY_UID = 0
         DUMMY_ADDR = b'\xfd\x02\xec\xeeby~u\xd8k\xcf\xf1d.\xb0\x84J\xfb(\xc7'
+        DUMMY_SIG = ('e79be9e20e121a8447b845c1b95b30b9bc4ed33db1de8e0f2c4401f56660506b7' +
+                     'f67dde4068f0a3a3763ef15d0c86988db8bbdaddfa9f42a36a9721349433e051b')
+        DUMMY_IS_DEPOSIT_BLOCK = True
 
+        (when(child_chain)
+            .submit_block(DUMMY_SIG, DUMMY_IS_DEPOSIT_BLOCK, DUMMY_UID)
+            .thenReturn(None))
         child_chain.apply_deposit(DUMMY_ADDR, DUMMY_AMOUNT, DUMMY_UID)
         with pytest.raises(DepositAlreadyAppliedException):
             child_chain.apply_deposit(DUMMY_ADDR, DUMMY_AMOUNT, DUMMY_UID)
@@ -88,7 +100,7 @@ class TestChildChain(UnstubMixin):
         block = child_chain.current_block
         when(child_chain.current_block).merklize_transaction_set().thenReturn(DUMMY_MERKLE)
         (when(root_chain.functions)
-            .submitBlock(DUMMY_MERKLE, block_number)
+            .submitBlock(DUMMY_MERKLE, block_number, ANY, ANY, ANY)
             .thenReturn(MOCK_FUNCTION))
         when(MOCK_FUNCTION).buildTransaction(ANY).thenReturn(DUMMY_TX)
         (when('plasma_cash.child_chain.child_chain')

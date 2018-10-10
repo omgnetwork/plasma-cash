@@ -48,4 +48,4 @@ class TestRootChain(UnstubMixin):
             sender=tester_chain.k1
         )
         assert contract.depositCount() == 1
-        assert contract.wallet(uid) == DUMMY_AMOUNT
+        assert contract.wallet(uid) == [True, False, DUMMY_AMOUNT, '0x' + tester_chain.a1.hex()]

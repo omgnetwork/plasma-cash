@@ -22,7 +22,7 @@ contract RootChain {
     uint public depositCount;
     uint public currentBlkNum;
     mapping(uint => bytes32) public childChain;
-    mapping(uint => uint) public wallet;
+    mapping(uint => funds) public wallet;
     mapping(uint => exit) public exits;
     mapping(uint => Challenge.challenge[]) public challenges;
 
@@ -34,6 +34,13 @@ contract RootChain {
         uint txBeforeExitTxBlkNum;
         bytes txBeforeExitTx;
         address owner;
+    }
+
+    struct funds {
+        bool hasValue;
+        bool isConfirmed;
+        uint amount;
+        address depositor;
     }
 
     /*
@@ -56,10 +63,24 @@ contract RootChain {
     // @dev Allows Plasma chain operator to submit block root
     // @param blkRoot The root of a child chain block
     // @param blknum The child chain block number
-    function submitBlock(bytes32 blkRoot, uint blknum)
+    function submitBlock(
+        bytes32 blkRoot,
+        uint blknum,
+        bool isDepositBlock,
+        bytes depositTx,
+        bytes depositTxProof
+    )
         public
         isAuthority
     {
+        if (isDepositBlock) {
+            Transaction.Tx memory txObj = depositTx.createTx();
+            bytes32 merkleHash = keccak256(depositTx);
+            // Check if the deposit is aborted
+            require(wallet[txObj.uid].hasValue);
+            require(merkleHash.checkMembership(txObj.uid, blkRoot, depositTxProof));
+            wallet[txObj.uid].isConfirmed = true;
+        }
         require(currentBlkNum + 1 == blknum);
         childChain[blknum] = blkRoot;
         currentBlkNum += 1;
@@ -78,10 +99,51 @@ contract RootChain {
             require(amount * 10**18 == msg.value);
         }
         uint uid = uint256(keccak256(currency, msg.sender, depositCount));
-        wallet[uid] = amount;
+        wallet[uid] = funds({
+            hasValue: true,
+            isConfirmed: false,
+            amount: amount,
+            depositor: msg.sender
+        });
         depositCount += 1;
         emit Deposit(msg.sender, amount, uid);
         return uid;
+    }
+
+    // @dev Abort an deposit which is not included in child chain
+    // @param uid The id to specify the deposit
+    function abortDeposit(uint uid) public {
+        require(!wallet[uid].isConfirmed);
+        require(wallet[uid].depositor == msg.sender);
+
+        msg.sender.transfer(wallet[uid].amount*10**18);
+        delete wallet[uid].hasValue;
+    }
+
+    // @dev Starts to exit a deposit transaction
+    // @param tx The transaction in bytes that user wants to exit
+    // @param txProof The merkle proof of the tx
+    // @param txBlkNum The block number of the tx
+    function startDepositExit(bytes tx, bytes txProof, uint txBlkNum) public {
+        Transaction.Tx memory txObj = tx.createTx();
+        require(txObj.prevBlock == 0);
+        require(msg.sender == txObj.newOwner);
+
+        bytes32 merkleHash = keccak256(tx);
+        bytes32 root = childChain[txBlkNum];
+        require(merkleHash.checkMembership(txObj.uid, root, txProof));
+
+        // Record the exit tx.
+        require(!exits[txObj.uid].hasValue);
+        exits[txObj.uid] = exit({
+            hasValue: true,
+            exitTime: block.timestamp + 2 weeks,
+            exitTxBlkNum: txBlkNum,
+            exitTx: tx,
+            txBeforeExitTxBlkNum: 0,
+            txBeforeExitTx: "",
+            owner: msg.sender
+        });
     }
 
     // @dev Starts to exit a transaction
@@ -211,7 +273,7 @@ contract RootChain {
             require(!challenges[uid][i].hasValue);
         }
 
-        exits[uid].owner.transfer(wallet[uid]*10**18);
+        exits[uid].owner.transfer(wallet[uid].amount*10**18);
         delete exits[uid].hasValue;
     }
 

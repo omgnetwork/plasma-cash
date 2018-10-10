@@ -81,6 +81,24 @@ class Client(object):
         ).buildTransaction({'from': self.address})
         self._sign_and_send_tx(tx)
 
+    def abort_deposit(self, uid):
+        tx = self.root_chain.functions.abortDeposit(uid).buildTransaction({'from': self.address})
+        self._sign_and_send_tx(tx)
+
+    def start_deposit_exit(self, uid, tx_blk_num):
+        block = self.get_block(tx_blk_num)
+
+        tx = block.get_tx_by_uid(uid)
+        block.merklize_transaction_set()
+        tx_proof = block.merkle.create_merkle_proof(uid)
+
+        tx = self.root_chain.functions.startDepositExit(
+            rlp.encode(tx),
+            tx_proof,
+            tx_blk_num
+        ).buildTransaction({'from': self.address})
+        self._sign_and_send_tx(tx)
+
     def challenge_exit(self, uid, tx_blk_num):
         block = self.get_block(tx_blk_num)
 

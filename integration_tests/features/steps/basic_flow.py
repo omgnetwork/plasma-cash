@@ -42,9 +42,6 @@ def userA_deposit_some_eth_to_plasma(context, amount):
     client.deposit(amount=amount, currency=eth_currency)
     time.sleep(5)
 
-    operator = Client(container.get_root_chain(), container.get_child_chain_client(), operator_key)
-    operator.submit_block()
-
 
 @then('userA has around {amount:d} eth in root chain')
 def userA_has_around_some_amount_of_eth_in_root_chain(context, amount):

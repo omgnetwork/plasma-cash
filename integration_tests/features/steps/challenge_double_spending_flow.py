@@ -31,9 +31,6 @@ def userA_deposits_some_amount_of_eth_in_plasma_cash(context, amount):
     client.deposit(amount=amount, currency=eth_currency)
     time.sleep(5)
 
-    operator = Client(container.get_root_chain(), container.get_child_chain_client(), operator_key)
-    operator.submit_block()
-
 
 @given('userA transfers {amount:d} eth to userB')
 def userA_transfers_some_eth_to_userB(context, amount):
@@ -52,9 +49,13 @@ def userA_tries_to_double_spend_some_eth_to_userC(context, amount):
     invalid_tx_merkle = SparseMerkleTree(257, {uid: invalid_tx.merkle_hash})
 
     root_chain = container.get_root_chain()
-    root_chain.functions.submitBlock(invalid_tx_merkle.root, TRANSFER_TX_2_BLOCK).transact({
-        'from': operator
-    })
+    root_chain.functions.submitBlock(
+        invalid_tx_merkle.root,
+        TRANSFER_TX_2_BLOCK,
+        False,
+        b'',
+        b''
+    ).transact({'from': operator})
 
 
 @when('userC starts to exit {amount:d} eth from plasma cash')

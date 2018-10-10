@@ -5,7 +5,7 @@ import rlp
 from ethereum import utils
 from web3.auto import w3
 
-from plasma_cash.utils.utils import get_sender
+from plasma_cash.utils.utils import get_sender, sign
 
 from .block import Block
 from .event import emit
@@ -53,26 +53,36 @@ class ChildChain(object):
         if not self.current_block.get_tx_by_uid(uid):
             deposit_tx = Transaction(0, uid, amount, new_owner)
             self.current_block.add_tx(deposit_tx)
+            sig = sign(self.current_block.hash, self.key)
+            self.submit_block(sig.hex(), True, uid)
             return deposit_tx.hash
 
         err_msg = 'deposit of uid: {} is already applied previously'.format(uid)
         raise DepositAlreadyAppliedException(err_msg)
 
-    def submit_block(self, sig):
+    def submit_block(self, sig, isDepositBlock=False, uid=None):
         signature = bytes.fromhex(sig)
         if (signature == b'\x00' * 65 or
            get_sender(self.current_block.hash, signature) != self.authority):
             raise InvalidBlockSignatureException('failed to submit a block')
 
         merkle_hash = self.current_block.merklize_transaction_set()
+        deposit_tx, deposit_tx_proof = b'', b''
+        if uid is not None:
+            deposit_tx = self.current_block.get_tx_by_uid(uid)
+            deposit_tx_proof = self.current_block.merkle.create_merkle_proof(uid)
 
         authority_address = w3.toChecksumAddress('0x' + self.authority.hex())
-        tx = (self.root_chain.functions
-              .submitBlock(merkle_hash, self.current_block_number)
-              .buildTransaction({
-                  'from': authority_address,
-                  'nonce': w3.eth.getTransactionCount(authority_address, 'pending')
-              }))
+        tx = self.root_chain.functions.submitBlock(
+            merkle_hash,
+            self.current_block_number,
+            isDepositBlock,
+            rlp.encode(deposit_tx),
+            deposit_tx_proof
+        ).buildTransaction({
+            'from': authority_address,
+            'nonce': w3.eth.getTransactionCount(authority_address, 'pending')
+        })
 
         signed = w3.eth.account.signTransaction(tx, self.key)
         w3.eth.sendRawTransaction(signed.rawTransaction)
